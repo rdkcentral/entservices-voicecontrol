@@ -1,4 +1,0 @@
-precondition = ["Platform"]
-callsign = "org.rdk.MotionDetection"
-autostart = "false"
-startuporder = "@PLUGIN_MOTIONDETECTION_STARTUPORDER@"

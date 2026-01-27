@@ -1,2 +1,3 @@
-# template
-Template repository with common workflows for future clone
+# Voice Control Plugin
+
+Repository for the thunder voice control plugin.
