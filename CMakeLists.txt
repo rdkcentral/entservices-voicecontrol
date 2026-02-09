@@ -36,9 +36,8 @@ string(TOLOWER ${NAMESPACE} STORAGE_DIRECTORY)
 # for writing pc and config files
 include(CmakeHelperFunctions)
 
-if(PLUGIN_VOICECONTROL)
-    add_subdirectory(plugin)
-endif()
+# Add voice control plugin
+add_subdirectory(plugin)
 
 if(WPEFRAMEWORK_CREATE_IPKG_TARGETS)
     set(CPACK_GENERATOR "DEB")
