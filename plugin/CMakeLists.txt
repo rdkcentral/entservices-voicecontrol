@@ -24,6 +24,11 @@ set(PLUGIN_VOICECONTROL_STARTUPORDER "" CACHE STRING "To configure startup order
 
 find_package(${NAMESPACE}Plugins REQUIRED)
 
+# TODO: Add test directory containing tests
+if (BUILD_TESTS)
+    add_subdirectory(test)
+endif(BUILD_TESTS)
+
 add_library(${MODULE_NAME} SHARED
         VoiceControl.cpp
         Module.cpp)
