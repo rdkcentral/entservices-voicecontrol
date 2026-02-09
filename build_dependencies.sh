@@ -43,7 +43,7 @@ git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-a
 
 git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
-git clone --depth 1 --branch feature/RDKEMW-12797 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
+git clone --depth 1 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
 
 ############################
 # Build Thunder-Tools
