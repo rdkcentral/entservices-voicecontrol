@@ -1,0 +1,1 @@
+# VoiceControl Plugin Architecture

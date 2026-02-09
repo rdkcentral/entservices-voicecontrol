@@ -1,10 +1,11 @@
-name: Build Component in Native Environment
+name: Build Component in Native Environment with Tests
 
 on:
-  push:
-    branches: [ main, 'sprint/**', 'release/**', develop ]
-  pull_request:
-    branches: [ main, 'sprint/**', 'release/**', topic/RDK*, develop ]
+  workflow_dispatch:
+  # push:
+  #   branches: [ main, 'sprint/**', 'release/**', develop ]
+  # pull_request:
+  #   branches: [ main, 'sprint/**', 'release/**', topic/RDK*, develop ]
 
 jobs:
   build-voicecontrol-on-pr:
@@ -19,13 +20,13 @@ jobs:
 
       - name: build dependencies
         run: |
-          sh -x build_dependencies.sh
+          sh -x build_dependencies.sh --build-tests
         env:
           GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
           CTRLM_TAG: ${{ vars.CTRLM_TAG }}
 
       - name: cov build
         run: |
-          sh -x cov_build.sh
+          sh -x cov_build.sh --build-tests
         env:
           GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
