@@ -76,7 +76,7 @@ curl -d '{"jsonrpc":"2.0","id":"6","method":"org.rdk.VoiceControl.1.voiceSession
 
 ## API Version
 
-Current API Version: 1.4.0
+Current API Version: 1.0.0
 
 ## License
 
