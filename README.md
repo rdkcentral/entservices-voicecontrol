@@ -74,10 +74,6 @@ curl -d '{"jsonrpc":"2.0","id":"6","method":"org.rdk.VoiceControl.1.voiceSession
 - CTRLM (with voice support)
 - jsoncpp
 
-## API Version
-
-Current API Version: 1.0.0
-
 ## License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
