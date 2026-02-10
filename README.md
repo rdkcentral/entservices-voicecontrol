@@ -29,10 +29,42 @@ For product features and capabilities, see [PRODUCT.md](PRODUCT.md).
 
 ## Building
 
+### Yocto/BitBake Build
+
+```bash
+bitbake thunder-plugins
+```
+
+### Manual Build
+
 ```bash
 mkdir build && cd build
 cmake ..
 make
+```
+
+## Testing
+
+### API Version and Quirks
+
+Test common plugin methods:
+
+```bash
+# Get API version number
+curl -d '{"jsonrpc":"2.0","id":"4","method":"org.rdk.VoiceControl.1.getApiVersionNumber"}' http://127.0.0.1:9998/jsonrpc
+
+# Get plugin quirks
+curl --header "Content-Type: application/json" --request POST --data '{"jsonrpc":"2.0","id":"3","method": "org.rdk.VoiceControl.1.getQuirks"}' http://127.0.0.1:9998/jsonrpc
+```
+
+### Voice Session Examples
+
+```bash
+# Check voice status
+curl -d '{"jsonrpc":"2.0","id":"5","method":"org.rdk.VoiceControl.1.voiceStatus"}' http://127.0.0.1:9998/jsonrpc
+
+# Get supported session types
+curl -d '{"jsonrpc":"2.0","id":"6","method":"org.rdk.VoiceControl.1.voiceSessionTypes"}' http://127.0.0.1:9998/jsonrpc
 ```
 
 ## Dependencies
