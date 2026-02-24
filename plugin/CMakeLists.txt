@@ -23,6 +23,14 @@ set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 set(PLUGIN_VOICECONTROL_STARTUPORDER "" CACHE STRING "To configure startup order of VoiceControl plugin")
 
 find_package(${NAMESPACE}Plugins REQUIRED)
+find_package(${NAMESPACE}Core REQUIRED)
+
+if (USE_THUNDER_R4)
+    find_package(${NAMESPACE}COM REQUIRED)
+    find_package(${NAMESPACE}WebSocket REQUIRED)
+else()
+    find_package(${NAMESPACE}Protocols REQUIRED)
+endif()
 
 # TODO: Add test directory containing tests
 if (BUILD_TESTS)
