@@ -7,19 +7,25 @@ on:
     branches: [ main, 'sprint/**', 'release/**', topic/RDK*, develop ]
 
 jobs:
-  build-entservices-on-pr:
-    name: Build entservices-peripherals component in github rdkcentral
+  build-voicecontrol-on-pr:
+    name: Build entservices-voicecontrol component in github rdkcentral
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rdkcentral/docker-rdk-ci:latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: native build
+      - name: build dependencies
         run: |
           sh -x build_dependencies.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
+          CTRLM_TAG: ${{ vars.CTRLM_TAG || 'develop' }}
+
+      - name: cov build
+        run: |
           sh -x cov_build.sh
         env:
           GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
