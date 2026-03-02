@@ -3,10 +3,12 @@ permissions:
 name: main-workflow
 
 on:
-  push:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
-  pull_request:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
+  # Will trigger tests automatically in a future commit
+  workflow_dispatch:
+  # push:
+  #   branches: [ main, develop, 'sprint/**', 'release/**' ]
+  # pull_request:
+  #   branches: [ main, develop, 'sprint/**', 'release/**' ]
 
 jobs:
   trigger-L1:
