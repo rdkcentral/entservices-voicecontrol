@@ -330,8 +330,9 @@ namespace WPEFramework {
                 {
                     LOGERR("ERROR - CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE Bus Call FAILED, res: %d.", (int)res);
 
-                    std::string marker_msg = "ERROR - CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE Bus Call FAILED, res: " + std::to_string((int)res);
-                    t2_event_s("WPE_ERROR_VoiceConfigFail", (char*)marker_msg.c_str());
+                    char telemetryValue[128] = {0};
+                    snprintf(telemetryValue, sizeof(telemetryValue), "ERROR - CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE Bus Call FAILED, res: %d.",(int)res);
+                    t2_event_s("WPE_ERROR_VoiceConfigFail", telemetryValue);
                     
                     bSuccess = false;
                 }
