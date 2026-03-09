@@ -58,6 +58,8 @@ else (CTRLM_FOUND)
     target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
 endif(CTRLM_FOUND)
 
+target_link_libraries(${MODULE_NAME} PRIVATE -ltelemetry_msgsender)
+
 install(TARGETS ${MODULE_NAME}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
