@@ -23,6 +23,8 @@
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
 
+#include <telemetry_busmessage_sender.h>
+
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 4
 #define API_VERSION_NUMBER_PATCH 0
@@ -327,6 +329,10 @@ namespace WPEFramework {
                 if (res != IARM_RESULT_SUCCESS)
                 {
                     LOGERR("ERROR - CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE Bus Call FAILED, res: %d.", (int)res);
+
+                    std::string marker_msg = "ERROR - CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE Bus Call FAILED, res: " + std::to_string((int)res);
+                    t2_event_s("WPE_ERROR_VoiceConfigFail", (char*)marker_msg.c_str());
+                    
                     bSuccess = false;
                 }
                 else
