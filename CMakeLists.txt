@@ -38,7 +38,7 @@ set(PLUGIN_NAME VoiceControl)
 set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 set(PLUGIN_IMPLEMENTATION ${MODULE_NAME}Implementation)
 
-target_link_libraries(${PLUGIN_IMPLEMENTATION} -ltelemetry_msgsender)
+target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE -ltelemetry_msgsender)
 
 if(WPEFRAMEWORK_CREATE_IPKG_TARGETS)
     set(CPACK_GENERATOR "DEB")
