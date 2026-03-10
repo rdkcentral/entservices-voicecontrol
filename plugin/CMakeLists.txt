@@ -24,6 +24,7 @@ set(PLUGIN_VOICECONTROL_STARTUPORDER "" CACHE STRING "To configure startup order
 
 find_package(${NAMESPACE}Plugins REQUIRED)
 find_package(${NAMESPACE}Core REQUIRED)
+find_package(Telemetry)
 
 if (USE_THUNDER_R4)
     find_package(${NAMESPACE}COM REQUIRED)
@@ -57,6 +58,11 @@ if (CTRLM_FOUND)
 else (CTRLM_FOUND)
     target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
 endif(CTRLM_FOUND)
+
+if(TELEMETRY_FOUND)
+    target_link_libraries(${MODULE_NAME} PRIVATE ${TELEMETRY_LIBRARIES})
+    target_include_directories(${MODULE_NAME} PRIVATE ${TELEMETRY_INCLUDE_DIRS})
+endif()
 
 install(TARGETS ${MODULE_NAME}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
