@@ -3,6 +3,7 @@
 #include "Module.h"
 #include <interfaces/IVoiceControl.h>
 #include <interfaces/json/JVoiceControl.h>
+#include <interfaces/IConfiguration.h>
 
 namespace WPEFramework {
 namespace Plugin {
@@ -89,8 +90,9 @@ namespace Plugin {
         Exchange::IVoiceControl* _implementation;
         uint32_t _connectionId;
         PluginHost::IShell* _service;
-        Core::SinkType<ConnectionNotification> _connectionNotification;
-        Core::SinkType<Notification> _notification;
+        Core::Sink<ConnectionNotification> _connectionNotification;
+        Core::Sink<Notification> _notification;
+        Exchange::IConfiguration* _configure{};
     };
 
 } // namespace Plugin

@@ -2,6 +2,7 @@
 
 #include "Module.h"
 #include <interfaces/IVoiceControl.h>
+#include <interfaces/IConfiguration.h>
 
 #include "libIBus.h"
 #include "ctrlm_ipc.h"
@@ -10,7 +11,7 @@
 namespace WPEFramework {
 namespace Plugin {
 
-    class VoiceControlImplementation : public Exchange::IVoiceControl {
+    class VoiceControlImplementation : public Exchange::IVoiceControl, public Exchange::IConfiguration {
     public:
         VoiceControlImplementation(const VoiceControlImplementation&) = delete;
         VoiceControlImplementation& operator=(const VoiceControlImplementation&) = delete;
@@ -20,6 +21,7 @@ namespace Plugin {
 
         BEGIN_INTERFACE_MAP(VoiceControlImplementation)
             INTERFACE_ENTRY(Exchange::IVoiceControl)
+            INTERFACE_ENTRY(Exchange::IConfiguration)
         END_INTERFACE_MAP
 
         // IVoiceControl methods
@@ -28,15 +30,18 @@ namespace Plugin {
         Core::hresult GetVoiceStatus(Exchange::VoiceStatusResponse& response, Exchange::IStringIterator*& capabilities) override;
         Core::hresult ConfigureVoice(const Exchange::ConfigureVoiceRequest& request, bool& success) override;
         Core::hresult SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, bool& success) override;
-        Core::hresult SendVoiceMessage(const Exchange::SendVoiceMessageRequest& request, bool& success) override;
+        Core::hresult SendVoiceMessage(const Exchange::ServerMessageEvent& request, bool& success) override;
         Core::hresult VoiceSessionByText(const Exchange::VoiceSessionByTextRequest& request, bool& success) override;
         Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
         Core::hresult VoiceSessionRequest(const Exchange::VoiceSessionRequestData& request, bool& success) override;
         Core::hresult VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, bool& success) override;
-        Core::hresult VoiceSessionAudioStreamStart(const Exchange::VoiceSessionAudioStreamStartRequest& request, bool& success) override;
+        Core::hresult VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, bool& success) override;
 
         void Register(Exchange::IVoiceControl::INotification* notification) override;
         void Unregister(const Exchange::IVoiceControl::INotification* notification) override;
+
+        // IConfiguration interface
+        uint32_t Configure(PluginHost::IShell* service) override;
 
     private:
         void InitializeIARM();
@@ -55,6 +60,7 @@ namespace Plugin {
         Core::hresult IARMBusCall(const string& method, const string& jsonParams, JsonObject& result);
 
         Core::CriticalSection _adminLock;
+        PluginHost::IShell* _service;
         std::vector<Exchange::IVoiceControl::INotification*> _notifications;
         bool _hasOwnProcess;
         bool _maskPii;

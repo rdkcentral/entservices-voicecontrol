@@ -10,38 +10,77 @@ namespace Plugin {
     const string VoiceControl::Initialize(PluginHost::IShell* service)
     {
         string message;
+
+        ASSERT(nullptr != service);
+        ASSERT(nullptr == _service);
+        ASSERT(nullptr == _implementation);
+        ASSERT(0 == _connectionId);
+
         _service = service;
         _service->AddRef();
         _service->Register(&_connectionNotification);
 
         _implementation = _service->Root<Exchange::IVoiceControl>(_connectionId, 2000, _T("VoiceControlImplementation"));
-        if (_implementation == nullptr) {
-            message = _T("VoiceControl could not be instantiated");
-        } else {
+
+        if (nullptr != _implementation)
+        {
+            _configure = _implementation->QueryInterface<Exchange::IConfiguration>();
+            if (_configure != nullptr)
+            {
+                uint32_t result = _configure->Configure(_service);
+                if (result != Core::ERROR_NONE)
+                {
+                    message = _T("VoiceControl could not be configured");
+                }
+            }
+            else
+            {
+                message = _T("VoiceControl implementation did not provide a configuration interface");
+            }
+
             _implementation->Register(&_notification);
             Exchange::JVoiceControl::Register(*this, _implementation);
         }
+        else
+        {
+            message = _T("VoiceControl could not be instantiated");
+        }
+
         return message;
     }
 
     void VoiceControl::Deinitialize(PluginHost::IShell* service)
     {
-        if (_implementation != nullptr) {
-            Exchange::JVoiceControl::Unregister(*this);
-            _implementation->Unregister(&_notification);
+        ASSERT(_service == service);
 
-            RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
-            _implementation->Release();
+        _service->Unregister(&_connectionNotification);
+
+        if (nullptr != _implementation)
+        {
+            _implementation->Unregister(&_notification);
+            Exchange::JVoiceControl::Unregister(*this);
+
+            if (_configure != nullptr) {
+                _configure->Release();
+                _configure = nullptr;
+            }
+
+            RPC::IRemoteConnection* connection = service->RemoteConnection(_connectionId);
+            VARIABLE_IS_NOT_USED uint32_t result = _implementation->Release();
             _implementation = nullptr;
-            if (connection != nullptr) {
+
+            ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
+
+            if (nullptr != connection)
+            {
                 connection->Terminate();
                 connection->Release();
             }
         }
-        _service->Unregister(&_connectionNotification);
+
+        _connectionId = 0;
         _service->Release();
         _service = nullptr;
-        _connectionId = 0;
     }
 
     void VoiceControl::Deactivated(RPC::IRemoteConnection* connection)

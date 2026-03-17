@@ -14,11 +14,28 @@ namespace Plugin {
 
     VoiceControlImplementation::VoiceControlImplementation()
         : _adminLock()
+        , _service(nullptr)
         , _notifications()
         , _hasOwnProcess(false)
         , _maskPii(false)
     {
         _instance = this;
+    }
+
+    VoiceControlImplementation::~VoiceControlImplementation()
+    {
+        DeinitializeIARM();
+        _instance = nullptr;
+        _service = nullptr;
+    }
+
+    uint32_t VoiceControlImplementation::Configure(PluginHost::IShell* service)
+    {
+        LOGINFO("Configuring VoiceControlImplementation");
+        uint32_t result = Core::ERROR_NONE;
+        ASSERT(service != nullptr);
+        _service = service;
+        _service->AddRef();
         InitializeIARM();
 
         // Query the initial maskPii setting from the voice status
@@ -28,12 +45,8 @@ namespace Plugin {
             _maskPii = statusResult.HasLabel("maskPii") ? statusResult["maskPii"].Boolean() : false;
             LOGINFO("Mask pii set to %s.", (_maskPii ? "True" : "False"));
         }
-    }
 
-    VoiceControlImplementation::~VoiceControlImplementation()
-    {
-        DeinitializeIARM();
-        _instance = nullptr;
+        return result;
     }
 
     // ─── INotification management ───
@@ -429,7 +442,7 @@ namespace Plugin {
         return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const Exchange::SendVoiceMessageRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const Exchange::ServerMessageEvent& request, bool& success)
     {
         JsonObject params;
         params["msgType"] = request.msgType;
@@ -542,7 +555,7 @@ namespace Plugin {
         return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionAudioStreamStartRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, bool& success)
     {
         JsonObject params;
         params["sessionId"] = request.sessionId;
