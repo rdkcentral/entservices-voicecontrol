@@ -425,7 +425,7 @@ namespace Plugin {
             JsonArray capArray;
             string cap;
             while (capabilities->Next(cap)) {
-                capArray.Add(Core::JSON::String(cap));
+                capArray.Add(Core::JSON::Variant(cap));
             }
             params["capabilities"] = capArray;
         }
