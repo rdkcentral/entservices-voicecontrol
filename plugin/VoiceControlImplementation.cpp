@@ -51,7 +51,7 @@ namespace Plugin {
 
     // ─── INotification management ───
 
-    void VoiceControlImplementation::Register(Exchange::IVoiceControl::INotification* notification)
+    Core::hresult VoiceControlImplementation::Register(Exchange::IVoiceControl::INotification* notification)
     {
         ASSERT(notification != nullptr);
 
@@ -62,9 +62,10 @@ namespace Plugin {
             _notifications.push_back(notification);
         }
         _adminLock.Unlock();
+        return Core::ERROR_NONE;
     }
 
-    void VoiceControlImplementation::Unregister(const Exchange::IVoiceControl::INotification* notification)
+    Core::hresult VoiceControlImplementation::Unregister(const Exchange::IVoiceControl::INotification* notification)
     {
         ASSERT(notification != nullptr);
 
@@ -75,6 +76,7 @@ namespace Plugin {
             _notifications.erase(it);
         }
         _adminLock.Unlock();
+        return Core::ERROR_NONE;
     }
 
     // ─── IARM lifecycle ───

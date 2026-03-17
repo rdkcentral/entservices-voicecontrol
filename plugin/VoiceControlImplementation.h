@@ -37,8 +37,8 @@ namespace Plugin {
         Core::hresult VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, bool& success) override;
         Core::hresult VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, bool& success) override;
 
-        void Register(Exchange::IVoiceControl::INotification* notification) override;
-        void Unregister(const Exchange::IVoiceControl::INotification* notification) override;
+        virtual Core::hresult Register(Exchange::IVoiceControl::INotification* notification) override;
+        virtual Core::hresult Unregister(const Exchange::IVoiceControl::INotification* notification) override;
 
         // IConfiguration interface
         uint32_t Configure(PluginHost::IShell* service) override;
