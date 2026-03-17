@@ -371,7 +371,7 @@ namespace Plugin {
                 capList.push_back(arr[i].String());
             }
         }
-        capabilities = Core::ServiceType<RPC::StringIterator>::Create<Exchange::IStringIterator>(capList);
+        capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capList);
 
         // Update internal maskPii state
         _maskPii = response.maskPii;
@@ -508,7 +508,7 @@ namespace Plugin {
                 typeList.push_back(arr[i].String());
             }
         }
-        types = Core::ServiceType<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
+        types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
 
         return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
     }
