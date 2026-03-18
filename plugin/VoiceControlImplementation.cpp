@@ -30,6 +30,16 @@ namespace Plugin {
     {
         DeinitializeIARM();
 
+        // Release any remaining notification observers to avoid leaking references
+        _adminLock.Lock();
+        for (auto* notification : _notifications) {
+            if (notification != nullptr) {
+                notification->Release();
+            }
+        }
+        _notifications.clear();
+        _adminLock.Unlock();
+
         if (_service != nullptr) {
             _service->Release();
             _service = nullptr;
@@ -38,10 +48,9 @@ namespace Plugin {
         _instance = nullptr;
     }
 
-    uint32_t VoiceControlImplementation::Configure(PluginHost::IShell* service)
+    Core::hresult VoiceControlImplementation::Configure(PluginHost::IShell* service)
     {
         LOGINFO("Configuring VoiceControlImplementation");
-        uint32_t result = Core::ERROR_NONE;
         ASSERT(service != nullptr);
         _service = service;
         _service->AddRef();
@@ -49,10 +58,13 @@ namespace Plugin {
 
         // Query the initial maskPii setting from the voice status
         JsonObject statusResult;
-        Core::hresult hr = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", statusResult);
-        if (hr == Core::ERROR_NONE) {
+        Core::hresult result = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", statusResult);
+        if (result == Core::ERROR_NONE) {
             _maskPii = statusResult.HasLabel("maskPii") ? statusResult["maskPii"].Boolean() : false;
             LOGINFO("Mask pii set to %s.", (_maskPii ? "True" : "False"));
+        } else {
+            _maskPii = false;
+            LOGERR("Failed to query initial voice status, defaulting maskPii to false. Error: %d", result);
         }
 
         return result;

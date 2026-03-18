@@ -41,7 +41,7 @@ namespace Plugin {
         virtual Core::hresult Unregister(const Exchange::IVoiceControl::INotification* notification) override;
 
         // IConfiguration interface
-        uint32_t Configure(PluginHost::IShell* service) override;
+        Core::hresult Configure(PluginHost::IShell* service) override;
 
     private:
         void InitializeIARM();
