@@ -27,10 +27,10 @@ namespace Plugin {
     {
         string message;
 
-        ASSERT(nullptr != service);
-        ASSERT(nullptr == _service);
-        ASSERT(nullptr == _implementation);
-        ASSERT(0 == _connectionId);
+        ASSERT(service != nullptr);
+        ASSERT(_service == nullptr);
+        ASSERT(_implementation == nullptr);
+        ASSERT(_connectionId == 0);
 
         _service = service;
         _service->AddRef();
@@ -38,7 +38,7 @@ namespace Plugin {
 
         _implementation = _service->Root<Exchange::IVoiceControl>(_connectionId, 2000, _T("VoiceControlImplementation"));
 
-        if (nullptr != _implementation)
+        if (_implementation != nullptr)
         {
             _configure = _implementation->QueryInterface<Exchange::IConfiguration>();
             if (_configure != nullptr)
@@ -54,12 +54,40 @@ namespace Plugin {
                 message = _T("VoiceControl implementation did not provide a configuration interface");
             }
 
-            _implementation->Register(&_notification);
-            Exchange::JVoiceControl::Register(*this, _implementation);
+            if (message.empty())
+            {
+                _implementation->Register(&_notification);
+                Exchange::JVoiceControl::Register(*this, _implementation);
+            }
         }
         else
         {
             message = _T("VoiceControl could not be instantiated");
+        }
+
+        if (!message.empty())
+        {
+            if (_implementation != nullptr)
+            {
+                if (_configure != nullptr)
+                {
+                    _configure->Release();
+                    _configure = nullptr;
+                }
+                RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+                VARIABLE_IS_NOT_USED uint32_t result = _implementation->Release();
+                _implementation = nullptr;
+                if (connection != nullptr)
+                {
+                    connection->Terminate();
+                    connection->Release();
+                }
+            }
+
+            _service->Unregister(&_connectionNotification);
+            _connectionId = 0;
+            _service->Release();
+            _service = nullptr;
         }
 
         return message;
@@ -71,7 +99,7 @@ namespace Plugin {
 
         _service->Unregister(&_connectionNotification);
 
-        if (nullptr != _implementation)
+        if (_implementation != nullptr)
         {
             _implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);

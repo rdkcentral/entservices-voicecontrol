@@ -50,9 +50,6 @@ target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
 
-install(TARGETS ${MODULE_NAME}
-        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
-
 add_library(${PLUGIN_IMPLEMENTATION} SHARED
         VoiceControlImplementation.cpp
         Module.cpp)
@@ -63,23 +60,23 @@ set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
 
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
 
+target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE
+        ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+        ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
+
 find_package(CTRLM)
 if (CTRLM_FOUND)
-    find_package(IARMBus)
     add_definitions(-DCTRLM_FOUND)
-    target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS})
     target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CTRLM_INCLUDE_DIRS})
-    target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE
-            ${NAMESPACE}Plugins::${NAMESPACE}Plugins
-            ${NAMESPACE}Definitions::${NAMESPACE}Definitions
-            ${IARMBUS_LIBRARIES})
-else (CTRLM_FOUND)
-    target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE
-            ${NAMESPACE}Plugins::${NAMESPACE}Plugins
-            ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
+
+    find_package(IARMBus)
+    if(IARMBus_FOUND)
+        target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS})
+        target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_LIBRARIES})
+    endif()
 endif(CTRLM_FOUND)
 
-install(TARGETS ${PLUGIN_IMPLEMENTATION}
-DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
+install(TARGETS ${MODULE_NAME} ${PLUGIN_IMPLEMENTATION}
+        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 write_config(${PLUGIN_NAME})
