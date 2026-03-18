@@ -208,6 +208,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onSessionBegin %s", eventData->payload);
 
         Exchange::SessionBeginEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
@@ -233,6 +234,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onStreamBegin %s", eventData->payload);
 
         Exchange::StreamBeginEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
@@ -256,6 +258,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onKeywordVerification %s", eventData->payload);
 
         Exchange::KeywordVerificationEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
@@ -280,6 +283,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onServerMessage %s", _maskPii ? "<***>" : eventData->payload);
 
         Exchange::ServerMessageEvent event;
         event.msgType = params.HasLabel("msgType") ? params["msgType"].String() : "";
@@ -305,6 +309,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onStreamEnd %s", eventData->payload);
 
         Exchange::StreamEndEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
@@ -329,6 +334,7 @@ namespace Plugin {
     {
         JsonObject params;
         params.FromString(eventData->payload);
+        LOGINFO("Notify onSessionEnd %s", _maskPii ? "<***>" : eventData->payload);
 
         Exchange::SessionEndEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
