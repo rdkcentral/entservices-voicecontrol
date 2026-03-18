@@ -28,6 +28,8 @@ namespace Plugin {
 
     VoiceControlImplementation::~VoiceControlImplementation()
     {
+        _instance = nullptr;
+
         DeinitializeIARM();
 
         // Release any remaining notification observers to avoid leaking references
@@ -44,8 +46,6 @@ namespace Plugin {
             _service->Release();
             _service = nullptr;
         }
-
-        _instance = nullptr;
     }
 
     Core::hresult VoiceControlImplementation::Configure(PluginHost::IShell* service)
