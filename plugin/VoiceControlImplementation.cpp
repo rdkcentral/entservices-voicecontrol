@@ -128,8 +128,9 @@ namespace Plugin {
 
     void VoiceControlImplementation::InitializeIARM()
     {
+        bool alreadyConnected = Utils::IARM::isConnected();
         if (Utils::IARM::init()) {
-            _hasOwnProcess = true;
+            _hasOwnProcess = !alreadyConnected;
             IARM_Result_t res;
             IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN,        voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN,         voiceEventHandler) );
