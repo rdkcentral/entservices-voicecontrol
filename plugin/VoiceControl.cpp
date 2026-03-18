@@ -1,11 +1,27 @@
 #include "VoiceControl.h"
 
+#define API_VERSION_NUMBER_MAJOR 1
+#define API_VERSION_NUMBER_MINOR 0
+#define API_VERSION_NUMBER_PATCH 1
+
 namespace WPEFramework {
-namespace Plugin {
 
     namespace {
-        static Metadata<VoiceControl> metadata(1, 0, 0, {}, {}, {});
+        static Plugin::Metadata<Plugin::VoiceControl> metadata(
+            // Version (Major, Minor, Patch)
+            API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH,
+            // Preconditions
+            {},
+            // Terminations
+            {},
+            // Controls
+            {}
+        );
     }
+
+namespace Plugin {
+
+    SERVICE_REGISTRATION(VoiceControl, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH)
 
     const string VoiceControl::Initialize(PluginHost::IShell* service)
     {
