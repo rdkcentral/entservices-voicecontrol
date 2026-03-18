@@ -115,7 +115,7 @@ namespace Plugin {
 
             ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
 
-            if (nullptr != connection)
+            if (connection != nullptr)
             {
                 connection->Terminate();
                 connection->Release();
