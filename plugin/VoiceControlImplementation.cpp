@@ -73,7 +73,12 @@ namespace Plugin {
         ASSERT(service != nullptr);
         _service = service;
         _service->AddRef();
+
         InitializeIARM();
+        if (Utils::IARM::isConnected() == false) {
+            LOGERR("Failed to initialize IARM for VoiceControlImplementation, configuration will fail");
+            return Core::ERROR_GENERAL;
+        }
 
         // Query the initial maskPii setting from the voice status
         JsonObject statusResult;
