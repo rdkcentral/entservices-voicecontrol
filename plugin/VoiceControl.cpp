@@ -129,10 +129,16 @@ namespace Plugin {
 
     void VoiceControl::Deactivated(RPC::IRemoteConnection* connection)
     {
-        if (connection->Id() == _connectionId) {
-            Core::IWorkerPool::Instance().Submit(
-                PluginHost::IShell::Job::Create(_service,
-                    PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+        if (connection->Id() == _connectionId)
+        {
+            if (_service != nullptr)
+            {
+                _service->AddRef();
+                Core::IWorkerPool::Instance().Submit(
+                    PluginHost::IShell::Job::Create(_service,
+                        PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+                _service->Release();
+            }
         }
     }
 
