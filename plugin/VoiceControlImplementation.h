@@ -22,6 +22,7 @@
 #include "Module.h"
 #include <interfaces/IVoiceControl.h>
 #include <interfaces/IConfiguration.h>
+#include <atomic>
 #include <vector>
 #include "libIBus.h"
 #include "ctrlm_ipc.h"
@@ -82,7 +83,7 @@ namespace Plugin {
         PluginHost::IShell* _service;
         std::vector<Exchange::IVoiceControl::INotification*> _notifications;
         bool _hasOwnProcess;
-        bool _maskPii;
+        std::atomic<bool> _maskPii;
 
         static VoiceControlImplementation* _instance;
     };

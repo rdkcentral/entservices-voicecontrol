@@ -80,7 +80,7 @@ namespace Plugin {
             return Core::ERROR_GENERAL;
         }
 
-        // Query the initial maskPii setting from the voice status
+        // Query the initial maskPii setting from the voice status and setting to false if absent
         JsonObject statusResult;
         Core::hresult result = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", statusResult);
         if (result == Core::ERROR_NONE) {
@@ -91,7 +91,7 @@ namespace Plugin {
             LOGERR("Failed to query initial voice status, defaulting maskPii to false. Error: %d", result);
         }
 
-        return result;
+        return Core::ERROR_NONE;
     }
 
     // ─── INotification management ───
