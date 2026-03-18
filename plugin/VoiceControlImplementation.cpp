@@ -71,6 +71,7 @@ namespace Plugin {
     {
         LOGINFO("Configuring VoiceControlImplementation");
         ASSERT(service != nullptr);
+        ASSERT(_service == nullptr);
         _service = service;
         _service->AddRef();
 
