@@ -3,7 +3,7 @@
 #include "Module.h"
 #include <interfaces/IVoiceControl.h>
 #include <interfaces/IConfiguration.h>
-
+#include <vector>
 #include "libIBus.h"
 #include "ctrlm_ipc.h"
 #include "ctrlm_ipc_voice.h"
