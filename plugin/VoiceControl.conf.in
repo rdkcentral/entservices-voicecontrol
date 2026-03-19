@@ -1,3 +1,11 @@
 precondition = ["Platform"]
 callsign = "org.rdk.VoiceControl"
 autostart = "false"
+
+configuration = JSON()
+rootobject = JSON()
+
+rootobject.add("mode", "@PLUGIN_VOICECONTROL_MODE@")
+rootobject.add("locator", "lib@PLUGIN_IMPLEMENTATION@.so")
+
+configuration.add("root", rootobject)
