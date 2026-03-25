@@ -18,15 +18,12 @@
   */
 
 #include "VoiceControlImplementation.h"
+#include "PluginVersion.h"
 #include "libIBusDaemon.h"
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 
 #include <algorithm>
-
-#define API_VERSION_NUMBER_MAJOR 1
-#define API_VERSION_NUMBER_MINOR 0
-#define API_VERSION_NUMBER_PATCH 1
 
 namespace WPEFramework {
 namespace Plugin {
@@ -420,7 +417,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::GetApiVersionNumber(Exchange::GetApiVersionNumberResponse& response)
     {
-        response.version = 1;
+        response.version = API_VERSION_NUMBER_MAJOR;
         response.success = true;
         return Core::ERROR_NONE;
     }
