@@ -73,7 +73,10 @@ namespace Plugin {
         _service = service;
         _service->AddRef();
 
-        InitializeIARM();
+        if (InitializeIARM() == false) {
+            LOGERR("Failed to initialize IARM for VoiceControlImplementation, configuration will fail");
+            return Core::ERROR_GENERAL;
+        }
         if (Utils::IARM::isConnected() == false) {
             LOGERR("Failed to initialize IARM for VoiceControlImplementation, configuration will fail");
             return Core::ERROR_GENERAL;
@@ -125,7 +128,7 @@ namespace Plugin {
 
     // ─── IARM lifecycle ───
 
-    void VoiceControlImplementation::InitializeIARM()
+    bool VoiceControlImplementation::InitializeIARM()
     {
         bool alreadyConnected = Utils::IARM::isConnected();
         if (Utils::IARM::init()) {
@@ -140,7 +143,9 @@ namespace Plugin {
             _handlersRegistered = true;
         } else {
             _hasOwnProcess = false;
+            return false;
         }
+        return true;
     }
 
     void VoiceControlImplementation::DeinitializeIARM()

@@ -64,7 +64,7 @@ namespace Plugin {
         Core::hresult Configure(PluginHost::IShell* service) override;
 
     private:
-        void InitializeIARM();
+        bool InitializeIARM();
         void DeinitializeIARM();
 
         static void voiceEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
