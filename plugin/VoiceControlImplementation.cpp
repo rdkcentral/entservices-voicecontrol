@@ -37,6 +37,7 @@ namespace Plugin {
         , _service(nullptr)
         , _notifications()
         , _hasOwnProcess(false)
+        , _handlersRegistered(false)
         , _maskPii(false)
     {
         _instance = this;
@@ -136,6 +137,7 @@ namespace Plugin {
             IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE,       voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END,           voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END,          voiceEventHandler) );
+            _handlersRegistered = true;
         } else {
             _hasOwnProcess = false;
         }
@@ -143,7 +145,7 @@ namespace Plugin {
 
     void VoiceControlImplementation::DeinitializeIARM()
     {
-        if (_hasOwnProcess) {
+        if (_handlersRegistered) {
             IARM_Result_t res;
             IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END,          voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END,           voiceEventHandler) );
@@ -151,7 +153,11 @@ namespace Plugin {
             IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE,       voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN,         voiceEventHandler) );
             IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN,        voiceEventHandler) );
+            _handlersRegistered = false;
+        }
 
+        if (_hasOwnProcess) {
+            IARM_Result_t res;
             IARM_CHECK( IARM_Bus_Disconnect() );
             IARM_CHECK( IARM_Bus_Term() );
             _hasOwnProcess = false;
