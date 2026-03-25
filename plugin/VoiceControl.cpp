@@ -72,8 +72,15 @@ namespace Plugin {
 
             if (message.empty())
             {
-                _implementation->Register(&_notification);
-                Exchange::JVoiceControl::Register(*this, _implementation);
+                uint32_t registerResult = _implementation->Register(&_notification);
+                if (registerResult != Core::ERROR_NONE)
+                {
+                    message = _T("VoiceControl failed to register notification handler");
+                }
+                else
+                {
+                    Exchange::JVoiceControl::Register(*this, _implementation);
+                }
             }
         }
         else
