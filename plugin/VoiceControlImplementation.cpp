@@ -28,7 +28,7 @@
 namespace WPEFramework {
 namespace Plugin {
 
-    SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH)
+    SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
     VoiceControlImplementation* VoiceControlImplementation::_instance = nullptr;
 
