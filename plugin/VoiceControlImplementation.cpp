@@ -23,6 +23,7 @@
 #include "UtilsIarm.h"
 
 #include <algorithm>
+#include <list>
 
 namespace WPEFramework {
 namespace Plugin {
