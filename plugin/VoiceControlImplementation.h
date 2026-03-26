@@ -83,7 +83,7 @@ namespace Plugin {
         PluginHost::IShell* _service;
         std::vector<Exchange::IVoiceControl::INotification*> _notifications;
         bool _hasOwnProcess;
-        bool _handlersRegistered;
+        uint8_t _handlersRegistered;
         std::atomic<bool> _maskPii;
 
         static VoiceControlImplementation* _instance;

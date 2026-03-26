@@ -64,7 +64,7 @@ namespace Plugin {
         , _service(nullptr)
         , _notifications()
         , _hasOwnProcess(false)
-        , _handlersRegistered(false)
+        , _handlersRegistered(0)
         , _maskPii(true)  // Defaults to 'true' as Configure() will load the real value
     {
         _instance = this;
@@ -172,7 +172,7 @@ namespace Plugin {
                 DeinitializeIARM(); \
                 return false; \
             } \
-            _handlersRegistered = true;
+            _handlersRegistered++;
             VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN)
             VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN)
             VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION)
@@ -189,15 +189,23 @@ namespace Plugin {
 
     void VoiceControlImplementation::DeinitializeIARM()
     {
-        if (_handlersRegistered) {
+        if (_handlersRegistered > 0) {
+            // Handlers are registered in order; remove only those that were successfully registered, in reverse.
+            // The registration order is:
+            //   1: CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN
+            //   2: CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN
+            //   3: CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION
+            //   4: CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE
+            //   5: CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END
+            //   6: CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END
             IARM_Result_t res;
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END,          voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END,           voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION, voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE,       voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN,         voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN,        voiceEventHandler) );
-            _handlersRegistered = false;
+            if (_handlersRegistered >= 6) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END,          voiceEventHandler) ); }
+            if (_handlersRegistered >= 5) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END,           voiceEventHandler) ); }
+            if (_handlersRegistered >= 4) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE,       voiceEventHandler) ); }
+            if (_handlersRegistered >= 3) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION, voiceEventHandler) ); }
+            if (_handlersRegistered >= 2) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN,         voiceEventHandler) ); }
+            if (_handlersRegistered >= 1) { IARM_CHECK( IARM_Bus_RemoveEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN,        voiceEventHandler) ); }
+            _handlersRegistered = 0;
         }
 
         if (_hasOwnProcess) {
