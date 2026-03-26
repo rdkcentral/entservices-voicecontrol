@@ -45,9 +45,8 @@ namespace Plugin {
 
     VoiceControlImplementation::~VoiceControlImplementation()
     {
-        _instance = nullptr;
-
         DeinitializeIARM();
+        _instance = nullptr;
 
         // Release any remaining notification observers to avoid leaking references
         _adminLock.Lock();
