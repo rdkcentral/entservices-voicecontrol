@@ -137,13 +137,21 @@ namespace Plugin {
         if (Utils::IARM::init()) {
             _hasOwnProcess = !alreadyConnected;
             IARM_Result_t res;
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN,        voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN,         voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION, voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE,       voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END,           voiceEventHandler) );
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END,          voiceEventHandler) );
+#define VC_REGISTER(EVENT) \
+            IARM_CHECK( IARM_Bus_RegisterEventHandler(CTRLM_MAIN_IARM_BUS_NAME, EVENT, voiceEventHandler) ); \
+            if (res != IARM_RESULT_SUCCESS) { \
+                LOGERR("Failed to register IARM event handler for " #EVENT ", rolling back."); \
+                DeinitializeIARM(); \
+                return false; \
+            } \
             _handlersRegistered = true;
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN)
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN)
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION)
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE)
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END)
+            VC_REGISTER(CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END)
+#undef VC_REGISTER
         } else {
             _hasOwnProcess = false;
             return false;
