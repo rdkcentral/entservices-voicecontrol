@@ -80,6 +80,7 @@ namespace Plugin {
         }
         if (Utils::IARM::isConnected() == false) {
             LOGERR("Failed to initialize IARM for VoiceControlImplementation, configuration will fail");
+            DeinitializeIARM();
             _service->Release();
             _service = nullptr;
             return Core::ERROR_GENERAL;
