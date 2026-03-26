@@ -556,6 +556,7 @@ namespace Plugin {
         JsonObject params;
         params["msgType"] = request.msgType;
         params["trx"] = request.trx;
+        // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
         params["created"] = static_cast<double>(request.created);
         params["msgPayload"] = request.msgPayload;
 
