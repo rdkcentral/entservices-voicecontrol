@@ -456,6 +456,8 @@ namespace Plugin {
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", result);
         if (callResult != Core::ERROR_NONE) {
+            response.success = false;
+            capabilities = nullptr;
             return callResult;
         }
 
