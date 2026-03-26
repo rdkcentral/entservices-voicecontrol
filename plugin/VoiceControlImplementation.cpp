@@ -28,6 +28,33 @@
 namespace WPEFramework {
 namespace Plugin {
 
+    namespace {
+        // ─── Enum ↔ string helpers for ctrlm IARM serialization ───
+        // ctrlm sends string representations of enums over JSON.
+
+        template <typename E>
+        E stringToEnum(const string& str, E defaultValue);
+
+        // --- DeviceType: ctrlm sends uppercase "PTT"/"FF"/"MIC" ---
+        template <>
+        Exchange::DeviceType stringToEnum<Exchange::DeviceType>(const string& str, Exchange::DeviceType defaultValue) {
+            if (str == "PTT") return Exchange::DeviceType::PTT;
+            if (str == "FF")  return Exchange::DeviceType::FF;
+            if (str == "MIC") return Exchange::DeviceType::MIC;
+            return defaultValue;
+        }
+
+        // --- SessionResult: ctrlm sends lowercase/camelCase "success"/"error"/"abort"/"shortUtterance" ---
+        template <>
+        Exchange::SessionResult stringToEnum<Exchange::SessionResult>(const string& str, Exchange::SessionResult defaultValue) {
+            if (str == "success")        return Exchange::SessionResult::SUCCESS;
+            if (str == "error")          return Exchange::SessionResult::ERROR;
+            if (str == "abort")          return Exchange::SessionResult::ABORT;
+            if (str == "shortUtterance") return Exchange::SessionResult::SHORT_UTTERANCE;
+            return defaultValue;
+        }
+    } // anonymous namespace
+
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
     VoiceControlImplementation* VoiceControlImplementation::_instance = nullptr;
@@ -259,7 +286,7 @@ namespace Plugin {
         Exchange::SessionBeginEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
         event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.deviceType = params.HasLabel("deviceType") ? static_cast<Exchange::DeviceType>(static_cast<uint8_t>(params["deviceType"].Number())) : Exchange::DeviceType::PTT;
+        event.deviceType = params.HasLabel("deviceType") ? stringToEnum<Exchange::DeviceType>(params["deviceType"].String(), Exchange::DeviceType::PTT) : Exchange::DeviceType::PTT;
         event.keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
 
         std::vector<Exchange::IVoiceControl::INotification*> observers;
@@ -385,7 +412,7 @@ namespace Plugin {
         Exchange::SessionEndEvent event;
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
         event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.result = params.HasLabel("result") ? static_cast<Exchange::SessionResult>(static_cast<uint8_t>(params["result"].Number())) : Exchange::SessionResult::ERROR;
+        event.result = params.HasLabel("result") ? stringToEnum<Exchange::SessionResult>(params["result"].String(), Exchange::SessionResult::ERROR) : Exchange::SessionResult::ERROR;
 
         if (params.HasLabel("serverStats")) {
             JsonObject statsObj = params["serverStats"].Object();
