@@ -491,7 +491,7 @@ namespace Plugin {
         // Update internal maskPii state
         _maskPii = response.maskPii;
 
-        return response.success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::ConfigureVoice(const Exchange::ConfigureVoiceRequest& request, bool& success)
@@ -626,7 +626,7 @@ namespace Plugin {
         }
         types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
 
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::VoiceSessionRequest(const Exchange::VoiceSessionRequestData& request, bool& success)
