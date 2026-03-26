@@ -595,7 +595,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, bool& success)
@@ -623,7 +623,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::SendVoiceMessage(const Exchange::ServerMessageEvent& request, bool& success)
@@ -646,7 +646,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::VoiceSessionByText(const Exchange::VoiceSessionByTextRequest& request, bool& success)
@@ -718,7 +718,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, bool& success)
@@ -737,7 +737,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, bool& success)
@@ -756,7 +756,7 @@ namespace Plugin {
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
-        return success ? Core::ERROR_NONE : Core::ERROR_GENERAL;
+        return Core::ERROR_NONE;
     }
 
 } // namespace Plugin
