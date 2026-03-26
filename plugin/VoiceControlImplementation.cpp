@@ -38,7 +38,7 @@ namespace Plugin {
         , _notifications()
         , _hasOwnProcess(false)
         , _handlersRegistered(false)
-        , _maskPii(false)
+        , _maskPii(true)  // Defaults to 'true' as Configure() will load the real value
     {
         _instance = this;
     }
@@ -93,8 +93,8 @@ namespace Plugin {
             _maskPii = statusResult.HasLabel("maskPii") ? statusResult["maskPii"].Boolean() : false;
             LOGINFO("Mask pii set to %s.", (_maskPii ? "True" : "False"));
         } else {
-            _maskPii = false;
-            LOGERR("Failed to query initial voice status, defaulting maskPii to false. Error: %d", result);
+            _maskPii = true;
+            LOGERR("Failed to query initial voice status, defaulting maskPii to true. Error: %d", result);
         }
 
         return Core::ERROR_NONE;
