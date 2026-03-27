@@ -327,6 +327,28 @@ namespace Plugin {
 
     // ─── Event notifications to observers ───
 
+    std::vector<Exchange::IVoiceControl::INotification*> VoiceControlImplementation::ObserverSnapshot()
+    {
+        std::vector<Exchange::IVoiceControl::INotification*> observers;
+
+        _adminLock.Lock();
+        for (auto* notification : _notifications) {
+            notification->AddRef();
+            observers.push_back(notification);
+        }
+        _adminLock.Unlock();
+
+        return observers;
+    }
+
+    void VoiceControlImplementation::ReleaseObserverSnapshot(std::vector<Exchange::IVoiceControl::INotification*>& observers)
+    {
+        for (auto* notification : observers) {
+            notification->Release();
+        }
+        observers.clear();
+    }
+
     void VoiceControlImplementation::NotifySessionBegin(ctrlm_voice_iarm_event_json_t* eventData)
     {
         JsonObject params;
@@ -339,18 +361,13 @@ namespace Plugin {
         event.deviceType = params.HasLabel("deviceType") ? stringToEnum<Exchange::DeviceType>(params["deviceType"].String(), Exchange::DeviceType::PTT) : Exchange::DeviceType::PTT;
         event.keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnSessionBegin(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     void VoiceControlImplementation::NotifyStreamBegin(ctrlm_voice_iarm_event_json_t* eventData)
@@ -363,18 +380,13 @@ namespace Plugin {
         event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
         event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnStreamBegin(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     void VoiceControlImplementation::NotifyKeywordVerification(ctrlm_voice_iarm_event_json_t* eventData)
@@ -388,18 +400,13 @@ namespace Plugin {
         event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
         event.verified = params.HasLabel("verified") ? params["verified"].Boolean() : false;
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnKeywordVerification(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     void VoiceControlImplementation::NotifyServerMessage(ctrlm_voice_iarm_event_json_t* eventData)
@@ -414,18 +421,13 @@ namespace Plugin {
         event.created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
         event.msgPayload = params.HasLabel("msgPayload") ? params["msgPayload"].String() : "";
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnServerMessage(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     void VoiceControlImplementation::NotifyStreamEnd(ctrlm_voice_iarm_event_json_t* eventData)
@@ -439,18 +441,13 @@ namespace Plugin {
         event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
         event.reason = params.HasLabel("reason") ? static_cast<uint8_t>(params["reason"].Number()) : 0;
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnStreamEnd(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     void VoiceControlImplementation::NotifySessionEnd(ctrlm_voice_iarm_event_json_t* eventData)
@@ -471,18 +468,13 @@ namespace Plugin {
             event.serverStats.connectTime = statsObj.HasLabel("connectTime") ? statsObj["connectTime"].Double() : 0.0;
         }
 
-        std::vector<Exchange::IVoiceControl::INotification*> observers;
-        _adminLock.Lock();
-        for (auto* notification : _notifications) {
-            notification->AddRef();
-            observers.push_back(notification);
-        }
-        _adminLock.Unlock();
+        auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
             notification->OnSessionEnd(event);
-            notification->Release();
         }
+
+        ReleaseObserverSnapshot(observers);
     }
 
     // ─── IARM call helper ───

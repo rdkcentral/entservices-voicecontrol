@@ -77,6 +77,9 @@ namespace Plugin {
         void NotifyStreamEnd(ctrlm_voice_iarm_event_json_t* eventData);
         void NotifySessionEnd(ctrlm_voice_iarm_event_json_t* eventData);
 
+        std::vector<Exchange::IVoiceControl::INotification*> ObserverSnapshot();
+        void ReleaseObserverSnapshot(std::vector<Exchange::IVoiceControl::INotification*>& observers);
+
         Core::hresult IARMBusCall(const string& method, const string& jsonParams, JsonObject& result);
 
         Core::CriticalSection _adminLock;
