@@ -83,6 +83,18 @@ namespace Plugin {
                 return "ptt_transcription";
             }
         }
+
+        bool tryParseJsonValue(const string& serialized, JsonValue& value)
+        {
+            if (serialized.empty()) {
+                return false;
+            }
+
+            Core::OptionalType<Core::JSON::Error> error;
+            value.FromString(serialized, error);
+
+            return (error.IsSet() == false) && value.IsValid();
+        }
     } // anonymous namespace
 
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
@@ -633,7 +645,13 @@ namespace Plugin {
         params["trx"] = request.trx;
         // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
         params["created"] = static_cast<double>(request.created);
-        params["msgPayload"] = request.msgPayload;
+
+        JsonValue payload;
+        if (tryParseJsonValue(request.msgPayload, payload) == true) {
+            params["msgPayload"] = payload;
+        } else {
+            params["msgPayload"] = request.msgPayload;
+        }
 
         string jsonParams;
         params.ToString(jsonParams);
