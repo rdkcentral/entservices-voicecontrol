@@ -95,6 +95,50 @@ namespace Plugin {
 
             return (error.IsSet() == false);
         }
+
+        string jsonValueToString(const JsonValue& value)
+        {
+            if (value.Content() == Core::JSON::Variant::type::STRING) {
+                return value.String();
+            }
+
+            string serialized;
+            value.ToString(serialized);
+            return serialized;
+        }
+
+        string stringOrEmpty(const JsonObject& object, const char label[])
+        {
+            if ((object.HasLabel(label) == true) && (object[label].Content() == Core::JSON::Variant::type::STRING)) {
+                return object[label].String();
+            }
+
+            return "";
+        }
+
+        string nestedStringOrEmpty(const JsonObject& object, const char parentLabel[], const char childLabel[])
+        {
+            if ((object.HasLabel(parentLabel) == true) && (object[parentLabel].Content() == Core::JSON::Variant::type::OBJECT)) {
+                const JsonObject child = object[parentLabel].Object();
+                return stringOrEmpty(child, childLabel);
+            }
+
+            return "";
+        }
+
+        string extractVoiceStatusUrl(const JsonObject& status, const char topLevelLabel[], const char primaryDeviceLabel[], const char secondaryDeviceLabel[] = nullptr)
+        {
+            string value = stringOrEmpty(status, topLevelLabel);
+
+            if (value.empty() == true) {
+                value = nestedStringOrEmpty(status, primaryDeviceLabel, "url");
+            }
+            if ((value.empty() == true) && (secondaryDeviceLabel != nullptr)) {
+                value = nestedStringOrEmpty(status, secondaryDeviceLabel, "url");
+            }
+
+            return value;
+        }
     } // anonymous namespace
 
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
@@ -419,7 +463,7 @@ namespace Plugin {
         event.msgType = params.HasLabel("msgType") ? params["msgType"].String() : "";
         event.trx = params.HasLabel("trx") ? params["trx"].String() : "";
         event.created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
-        event.msgPayload = params.HasLabel("msgPayload") ? params["msgPayload"].String() : "";
+        event.msgPayload = params.HasLabel("msgPayload") ? jsonValueToString(params["msgPayload"]) : "";
 
         auto observers = ObserverSnapshot();
 
@@ -481,7 +525,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::IARMBusCall(const string& method, const string& jsonParams, JsonObject& result)
     {
-        size_t totalsize = sizeof(ctrlm_voice_iarm_call_json_t) + jsonParams.size() + 1;
+        const size_t totalsize = sizeof(ctrlm_voice_iarm_call_json_t) + jsonParams.size() + 1;
         ctrlm_voice_iarm_call_json_t* call = (ctrlm_voice_iarm_call_json_t*)calloc(1, totalsize);
 
         if (call == nullptr) {
@@ -490,7 +534,7 @@ namespace Plugin {
         }
 
         call->api_revision = CTRLM_VOICE_IARM_BUS_API_REVISION;
-        size_t len = jsonParams.copy(call->payload, jsonParams.size());
+        const size_t len = jsonParams.copy(call->payload, jsonParams.size());
         call->payload[len] = '\0';
 
         IARM_Result_t res = IARM_Bus_Call(CTRLM_MAIN_IARM_BUS_NAME, method.c_str(), (void*)call, totalsize);
@@ -531,8 +575,8 @@ namespace Plugin {
         }
 
         response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : false;
-        response.urlPtt = result.HasLabel("urlPtt") ? result["urlPtt"].String() : "";
-        response.urlHf = result.HasLabel("urlHf") ? result["urlHf"].String() : "";
+        response.urlPtt = extractVoiceStatusUrl(result, "urlPtt", "ptt");
+        response.urlHf = extractVoiceStatusUrl(result, "urlHf", "ff", "mic");
         response.prv = result.HasLabel("prv") ? result["prv"].Boolean() : false;
         response.wwFeedback = result.HasLabel("wwFeedback") ? result["wwFeedback"].Boolean() : false;
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -558,6 +602,10 @@ namespace Plugin {
             }
         }
         capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capList);
+
+        if ((response.success == true) && ((response.urlPtt.empty() == true) || (response.urlHf.empty() == true))) {
+            LOGWARN("Voice status returned without all routing URLs: urlPtt=<%s> urlHf=<%s>", response.urlPtt.c_str(), response.urlHf.c_str());
+        }
 
         // Update internal maskPii state
         _maskPii = response.maskPii;
