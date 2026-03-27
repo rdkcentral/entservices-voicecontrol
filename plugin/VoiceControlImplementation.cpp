@@ -93,7 +93,7 @@ namespace Plugin {
             Core::OptionalType<Core::JSON::Error> error;
             value.FromString(serialized, error);
 
-            return (error.IsSet() == false) && value.IsValid();
+            return (error.IsSet() == false);
         }
     } // anonymous namespace
 
