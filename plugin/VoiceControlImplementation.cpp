@@ -198,11 +198,11 @@ namespace Plugin {
             return Core::ERROR_GENERAL;
         }
 
-        // Query the initial maskPii setting from the voice status and setting to false if absent
+        // Query the initial maskPii setting from the voice status; default to true (mask PII) if absent.
         JsonObject statusResult;
         Core::hresult result = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", statusResult);
         if (result == Core::ERROR_NONE) {
-            _maskPii = statusResult.HasLabel("maskPii") ? statusResult["maskPii"].Boolean() : false;
+            _maskPii = statusResult.HasLabel("maskPii") ? statusResult["maskPii"].Boolean() : true;
             LOGINFO("Mask pii set to %s.", (_maskPii ? "True" : "False"));
         } else {
             _maskPii = true;
@@ -578,7 +578,7 @@ namespace Plugin {
             return callResult;
         }
 
-        response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : false;
+        response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : true;
         response.urlPtt = extractVoiceStatusUrl(result, "urlPtt", "ptt");
         response.urlHf = extractVoiceStatusUrl(result, "urlHf", "ff", "mic");
         response.prv = result.HasLabel("prv") ? result["prv"].Boolean() : false;
