@@ -463,6 +463,10 @@ namespace Plugin {
         event.trx = params.HasLabel("trx") ? params["trx"].String() : "";
         event.created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
         event.msgPayload = params.HasLabel("msgPayload") ? jsonValueToString(params["msgPayload"]) : "";
+        if (_maskPii) {
+            // Redact payload when PII masking is enabled to avoid exposing sensitive data to observers.
+            event.msgPayload.clear();
+        }
 
         auto observers = ObserverSnapshot();
 
