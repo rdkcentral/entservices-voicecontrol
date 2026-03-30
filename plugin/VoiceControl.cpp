@@ -42,24 +42,32 @@ namespace Plugin {
     const string VoiceControl::Initialize(PluginHost::IShell* service)
     {
         string message;
+        PluginHost::IShell* shell = service;
+        Exchange::IVoiceControl* implementation = nullptr;
+        Exchange::IConfiguration* configure = nullptr;
+        uint32_t connectionId = 0;
 
         ASSERT(service != nullptr);
+        _adminLock.Lock();
         ASSERT(_service == nullptr);
         ASSERT(_implementation == nullptr);
+        ASSERT(_configure == nullptr);
         ASSERT(_connectionId == 0);
-
-        _service = service;
+        _isShuttingDown = false;
+        _service = shell;
         _service->AddRef();
-        _service->Register(&_connectionNotification);
+        _adminLock.Unlock();
 
-        _implementation = _service->Root<Exchange::IVoiceControl>(_connectionId, 2000, _T("VoiceControlImplementation"));
+        shell->Register(&_connectionNotification);
 
-        if (_implementation != nullptr)
+        implementation = shell->Root<Exchange::IVoiceControl>(connectionId, 2000, _T("VoiceControlImplementation"));
+
+        if (implementation != nullptr)
         {
-            _configure = _implementation->QueryInterface<Exchange::IConfiguration>();
-            if (_configure != nullptr)
+            configure = implementation->QueryInterface<Exchange::IConfiguration>();
+            if (configure != nullptr)
             {
-                uint32_t result = _configure->Configure(_service);
+                const uint32_t result = configure->Configure(shell);
                 if (result != Core::ERROR_NONE)
                 {
                     message = _T("VoiceControl could not be configured");
@@ -72,14 +80,20 @@ namespace Plugin {
 
             if (message.empty())
             {
-                uint32_t registerResult = _implementation->Register(&_notification);
+                const uint32_t registerResult = implementation->Register(&_notification);
                 if (registerResult != Core::ERROR_NONE)
                 {
                     message = _T("VoiceControl failed to register notification handler");
                 }
                 else
                 {
-                    Exchange::JVoiceControl::Register(*this, _implementation);
+                    _adminLock.Lock();
+                    _implementation = implementation;
+                    _configure = configure;
+                    _connectionId = connectionId;
+                    _adminLock.Unlock();
+
+                    Exchange::JVoiceControl::Register(*this, implementation);
                 }
             }
         }
@@ -90,16 +104,20 @@ namespace Plugin {
 
         if (!message.empty())
         {
-            if (_implementation != nullptr)
+            _adminLock.Lock();
+            _service = nullptr;
+            _connectionId = 0;
+            _isShuttingDown = false;
+            _adminLock.Unlock();
+
+            if (implementation != nullptr)
             {
-                if (_configure != nullptr)
+                if (configure != nullptr)
                 {
-                    _configure->Release();
-                    _configure = nullptr;
+                    configure->Release();
                 }
-                RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
-                VARIABLE_IS_NOT_USED uint32_t result = _implementation->Release();
-                _implementation = nullptr;
+                RPC::IRemoteConnection* connection = shell->RemoteConnection(connectionId);
+                VARIABLE_IS_NOT_USED const uint32_t result = implementation->Release();
                 if (connection != nullptr)
                 {
                     connection->Terminate();
@@ -107,10 +125,8 @@ namespace Plugin {
                 }
             }
 
-            _service->Unregister(&_connectionNotification);
-            _connectionId = 0;
-            _service->Release();
-            _service = nullptr;
+            shell->Unregister(&_connectionNotification);
+            shell->Release();
         }
 
         return message;
@@ -118,23 +134,37 @@ namespace Plugin {
 
     void VoiceControl::Deinitialize(PluginHost::IShell* service)
     {
+        Exchange::IVoiceControl* implementation = nullptr;
+        Exchange::IConfiguration* configure = nullptr;
+        PluginHost::IShell* shell = nullptr;
+        uint32_t connectionId = 0;
+
+        _adminLock.Lock();
         ASSERT(_service == service);
+        _isShuttingDown = true;
+        implementation = _implementation;
+        configure = _configure;
+        shell = _service;
+        connectionId = _connectionId;
+        _implementation = nullptr;
+        _configure = nullptr;
+        _service = nullptr;
+        _connectionId = 0;
+        _adminLock.Unlock();
 
-        _service->Unregister(&_connectionNotification);
+        shell->Unregister(&_connectionNotification);
 
-        if (_implementation != nullptr)
+        if (implementation != nullptr)
         {
-            _implementation->Unregister(&_notification);
+            implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);
 
-            if (_configure != nullptr) {
-                _configure->Release();
-                _configure = nullptr;
+            if (configure != nullptr) {
+                configure->Release();
             }
 
-            RPC::IRemoteConnection* connection = service->RemoteConnection(_connectionId);
-            VARIABLE_IS_NOT_USED uint32_t result = _implementation->Release();
-            _implementation = nullptr;
+            RPC::IRemoteConnection* connection = service->RemoteConnection(connectionId);
+            VARIABLE_IS_NOT_USED const uint32_t result = implementation->Release();
 
             ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
 
@@ -145,23 +175,29 @@ namespace Plugin {
             }
         }
 
-        _connectionId = 0;
-        _service->Release();
-        _service = nullptr;
+        shell->Release();
+
+        _adminLock.Lock();
+        _isShuttingDown = false;
+        _adminLock.Unlock();
     }
 
     void VoiceControl::Deactivated(RPC::IRemoteConnection* connection)
     {
-        if (connection->Id() == _connectionId)
-        {
-            if (_service != nullptr)
-            {
-                _service->AddRef();
-                Core::IWorkerPool::Instance().Submit(
-                    PluginHost::IShell::Job::Create(_service,
-                        PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
-                _service->Release();
-            }
+        PluginHost::IShell* shell = nullptr;
+
+        _adminLock.Lock();
+        if ((_isShuttingDown == false) && (_service != nullptr) && (connection->Id() == _connectionId)) {
+            shell = _service;
+            shell->AddRef();
+        }
+        _adminLock.Unlock();
+
+        if (shell != nullptr) {
+            Core::IWorkerPool::Instance().Submit(
+                PluginHost::IShell::Job::Create(shell,
+                    PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+            shell->Release();
         }
     }
 

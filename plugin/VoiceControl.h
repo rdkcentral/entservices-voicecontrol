@@ -33,9 +33,11 @@ namespace Plugin {
         VoiceControl& operator=(const VoiceControl&) = delete;
 
         VoiceControl()
-            : _implementation(nullptr)
+            : _adminLock()
+            , _implementation(nullptr)
             , _connectionId(0)
             , _service(nullptr)
+            , _isShuttingDown(false)
             , _connectionNotification(this)
             , _notification(this)
         {
@@ -106,9 +108,11 @@ namespace Plugin {
 
         void Deactivated(RPC::IRemoteConnection* connection);
 
+        Core::CriticalSection _adminLock;
         Exchange::IVoiceControl* _implementation;
         uint32_t _connectionId;
         PluginHost::IShell* _service;
+        bool _isShuttingDown;
         Core::Sink<ConnectionNotification> _connectionNotification;
         Core::Sink<Notification> _notification;
         Exchange::IConfiguration* _configure{};
