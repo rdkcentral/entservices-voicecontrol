@@ -165,8 +165,10 @@ namespace Plugin {
 
             RPC::IRemoteConnection* connection = service->RemoteConnection(connectionId);
             VARIABLE_IS_NOT_USED const uint32_t result = implementation->Release();
-
-            ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
+            if (result != Core::ERROR_DESTRUCTION_SUCCEEDED)
+            {
+                LOGWARN("VoiceControl implementation release returned %u during shutdown; proceeding with remote connection termination.", result);
+            }
 
             if (connection != nullptr)
             {
