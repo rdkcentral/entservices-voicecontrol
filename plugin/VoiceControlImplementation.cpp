@@ -98,13 +98,12 @@ namespace Plugin {
 
         string jsonValueToString(const JsonValue& value)
         {
-            if (value.Content() == Core::JSON::Variant::type::STRING) {
-                return value.String();
-            }
-
-            string serialized;
-            value.ToString(serialized);
-            return serialized;
+            // Variant stores the pre-serialized representation in Value(), which
+            // String() returns directly: raw unquoted content for STRING, and the
+            // already-serialized JSON form ({...}, [...], 42, true) for all other
+            // types. Avoids Variant::ToString(string&) which is declared inline in
+            // this Thunder version but has no reachable definition.
+            return value.String();
         }
 
         string stringOrEmpty(const JsonObject& object, const char label[])
