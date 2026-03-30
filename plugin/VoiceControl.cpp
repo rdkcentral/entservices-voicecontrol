@@ -19,6 +19,7 @@
 
 #include "VoiceControl.h"
 #include "PluginVersion.h"
+#include "UtilsLogging.h"
 
 namespace WPEFramework {
 
