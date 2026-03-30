@@ -511,7 +511,8 @@ namespace Plugin {
         if (params.HasLabel("serverStats")) {
             JsonObject statsObj = params["serverStats"].Object();
             event.serverStats.dnsTime = statsObj.HasLabel("dnsTime") ? statsObj["dnsTime"].Double() : 0.0;
-            event.serverStats.serverIp = statsObj.HasLabel("serverIp") ? statsObj["serverIp"].String() : "";
+            // When PII masking is enabled, avoid propagating server IP to observers.
+            event.serverStats.serverIp = (!_maskPii && statsObj.HasLabel("serverIp")) ? statsObj["serverIp"].String() : "";
             event.serverStats.connectTime = statsObj.HasLabel("connectTime") ? statsObj["connectTime"].Double() : 0.0;
         }
 
