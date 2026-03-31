@@ -617,27 +617,27 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const Exchange::ConfigureVoiceRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, bool& success)
     {
         JsonObject params;
-        params["urlAll"] = request.urlAll;
-        params["urlPtt"] = request.urlPtt;
-        params["urlHf"] = request.urlHf;
-        params["urlMicTap"] = request.urlMicTap;
-        params["enable"] = request.enable;
-        params["prv"] = request.prv;
-        params["wwFeedback"] = request.wwFeedback;
+        params["urlAll"] = urlAll;
+        params["urlPtt"] = urlPtt;
+        params["urlHf"] = urlHf;
+        params["urlMicTap"] = urlMicTap;
+        params["enable"] = enable;
+        params["prv"] = prv;
+        params["wwFeedback"] = wwFeedback;
 
         JsonObject pttObj;
-        pttObj["enable"] = request.ptt.enable;
+        pttObj["enable"] = ptt.enable;
         params["ptt"] = pttObj;
 
         JsonObject ffObj;
-        ffObj["enable"] = request.ff.enable;
+        ffObj["enable"] = ff.enable;
         params["ff"] = ffObj;
 
         JsonObject micObj;
-        micObj["enable"] = request.mic.enable;
+        micObj["enable"] = mic.enable;
         params["mic"] = micObj;
 
         string jsonParams;
@@ -682,19 +682,19 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const Exchange::ServerMessageEvent& request, bool& success)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, bool& success)
     {
         JsonObject params;
-        params["msgType"] = request.msgType;
-        params["trx"] = request.trx;
+        params["msgType"] = msgType;
+        params["trx"] = trx;
         // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
-        params["created"] = static_cast<double>(request.created);
+        params["created"] = static_cast<double>(created);
 
         JsonValue payload;
-        if (tryParseJsonValue(request.msgPayload, payload) == true) {
+        if (tryParseJsonValue(msgPayload, payload) == true) {
             params["msgPayload"] = payload;
         } else {
-            params["msgPayload"] = request.msgPayload;
+            params["msgPayload"] = msgPayload;
         }
 
         string jsonParams;
@@ -711,28 +711,28 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionByText(const Exchange::VoiceSessionByTextRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, bool& success)
     {
         // Translate the deprecated API to voiceSessionRequest
-        Exchange::VoiceSessionRequestData translated;
-        translated.transcription = request.transcription;
+        string translatedAudioFile;
+        Exchange::VoiceSessionRequestType translatedType;
 
-        switch (request.type) {
+        switch (type) {
             case Exchange::DeviceType::PTT:
-                translated.type = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
+                translatedType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
                 break;
             case Exchange::DeviceType::FF:
-                translated.type = Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION;
+                translatedType = Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION;
                 break;
             case Exchange::DeviceType::MIC:
-                translated.type = Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION;
+                translatedType = Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION;
                 break;
             default:
-                translated.type = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
+                translatedType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
                 break;
         }
 
-        return VoiceSessionRequest(translated, success);
+        return VoiceSessionRequest(transcription, translatedAudioFile, translatedType, success);
     }
 
     Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
@@ -758,15 +758,15 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const Exchange::VoiceSessionRequestData& request, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, bool& success)
     {
         JsonObject params;
-        params["type"] = voiceSessionRequestTypeToString(request.type);
-        if (!request.transcription.empty()) {
-            params["transcription"] = request.transcription;
+        params["type"] = voiceSessionRequestTypeToString(type);
+        if (!transcription.empty()) {
+            params["transcription"] = transcription;
         }
-        if (!request.audioFile.empty()) {
-            params["audioFile"] = request.audioFile;
+        if (!audioFile.empty()) {
+            params["audioFile"] = audioFile;
         }
 
         string jsonParams;
@@ -783,10 +783,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, bool& success)
     {
         JsonObject params;
-        params["sessionId"] = request.sessionId;
+        params["sessionId"] = sessionId;
 
         string jsonParams;
         params.ToString(jsonParams);
@@ -802,10 +802,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, bool& success)
     {
         JsonObject params;
-        params["sessionId"] = request.sessionId;
+        params["sessionId"] = sessionId;
 
         string jsonParams;
         params.ToString(jsonParams);
