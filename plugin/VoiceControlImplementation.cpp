@@ -105,39 +105,6 @@ namespace Plugin {
             // this Thunder version but has no reachable definition.
             return value.String();
         }
-
-        string stringOrEmpty(const JsonObject& object, const char label[])
-        {
-            if ((object.HasLabel(label) == true) && (object[label].Content() == Core::JSON::Variant::type::STRING)) {
-                return object[label].String();
-            }
-
-            return "";
-        }
-
-        string nestedStringOrEmpty(const JsonObject& object, const char parentLabel[], const char childLabel[])
-        {
-            if ((object.HasLabel(parentLabel) == true) && (object[parentLabel].Content() == Core::JSON::Variant::type::OBJECT)) {
-                const JsonObject child = object[parentLabel].Object();
-                return stringOrEmpty(child, childLabel);
-            }
-
-            return "";
-        }
-
-        string extractVoiceStatusUrl(const JsonObject& status, const char topLevelLabel[], const char primaryDeviceLabel[], const char secondaryDeviceLabel[] = nullptr)
-        {
-            string value = stringOrEmpty(status, topLevelLabel);
-
-            if (value.empty() == true) {
-                value = nestedStringOrEmpty(status, primaryDeviceLabel, "url");
-            }
-            if ((value.empty() == true) && (secondaryDeviceLabel != nullptr)) {
-                value = nestedStringOrEmpty(status, secondaryDeviceLabel, "url");
-            }
-
-            return value;
-        }
     } // anonymous namespace
 
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
