@@ -568,52 +568,21 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceStatus(Exchange::VoiceStatusResponse& response, Exchange::IStringIterator*& capabilities)
+    Core::hresult VoiceControlImplementation::GetVoiceStatus(string& response)
     {
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", result);
         if (callResult != Core::ERROR_NONE) {
-            response.success = false;
-            capabilities = nullptr;
-            return callResult;
-        }
-
-        response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : true;
-        response.urlPtt = extractVoiceStatusUrl(result, "urlPtt", "ptt");
-        response.urlHf = extractVoiceStatusUrl(result, "urlHf", "ff", "mic");
-        response.prv = result.HasLabel("prv") ? result["prv"].Boolean() : false;
-        response.wwFeedback = result.HasLabel("wwFeedback") ? result["wwFeedback"].Boolean() : false;
-        response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
-
-        if (result.HasLabel("ptt")) {
-            JsonObject pttObj = result["ptt"].Object();
-            response.ptt.status = pttObj.HasLabel("status") ? pttObj["status"].String() : "";
-        }
-        if (result.HasLabel("ff")) {
-            JsonObject ffObj = result["ff"].Object();
-            response.ff.status = ffObj.HasLabel("status") ? ffObj["status"].String() : "";
-        }
-        if (result.HasLabel("mic")) {
-            JsonObject micObj = result["mic"].Object();
-            response.mic.status = micObj.HasLabel("status") ? micObj["status"].String() : "";
-        }
-
-        std::list<string> capList;
-        if (result.HasLabel("capabilities")) {
-            auto arr = result["capabilities"].Array();
-            for (uint16_t i = 0; i < arr.Length(); i++) {
-                capList.push_back(arr[i].String());
-            }
-        }
-        capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capList);
-
-        if ((response.success == true) && ((response.urlPtt.empty() == true) || (response.urlHf.empty() == true))) {
-            LOGWARN("Voice status returned without all routing URLs: urlPtt=<%s> urlHf=<%s>", response.urlPtt.c_str(), response.urlHf.c_str());
+            response = R"({"success":false})";
+            return Core::ERROR_NONE;
         }
 
         // Update internal maskPii state
-        _maskPii = response.maskPii;
+        if (result.HasLabel("maskPii")) {
+            _maskPii = result["maskPii"].Boolean();
+        }
 
+        result.ToString(response);
         return Core::ERROR_NONE;
     }
 
@@ -647,7 +616,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -675,7 +644,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -709,7 +678,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SEND_VOICE_MESSAGE, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -746,7 +715,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -781,7 +750,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -800,7 +769,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TERMINATE, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
@@ -819,7 +788,7 @@ namespace Plugin {
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_AUDIO_STREAM_START, jsonParams, result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            return callResult;
+            return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
