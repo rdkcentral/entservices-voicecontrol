@@ -48,14 +48,14 @@ namespace Plugin {
         Core::hresult GetApiVersionNumber(Exchange::GetApiVersionNumberResponse& response) override;
         Core::hresult SendNotify_(const string& eventName, string& parameters) override;
         Core::hresult GetVoiceStatus(string& response) override;
-        Core::hresult ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, bool& success) override;
-        Core::hresult SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, bool& success) override;
-        Core::hresult SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, bool& success) override;
-        Core::hresult VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, bool& success) override;
+        Core::hresult ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, Exchange::SuccessResult& result) override;
+        Core::hresult SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::SuccessResult& result) override;
+        Core::hresult SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::SuccessResult& result) override;
+        Core::hresult VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::SuccessResult& result) override;
         Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
-        Core::hresult VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, bool& success) override;
-        Core::hresult VoiceSessionTerminate(const string& sessionId, bool& success) override;
-        Core::hresult VoiceSessionAudioStreamStart(const string& sessionId, bool& success) override;
+        Core::hresult VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::SuccessResult& result) override;
+        Core::hresult VoiceSessionTerminate(const string& sessionId, Exchange::SuccessResult& result) override;
+        Core::hresult VoiceSessionAudioStreamStart(const string& sessionId, Exchange::SuccessResult& result) override;
 
         virtual Core::hresult Register(Exchange::IVoiceControl::INotification* notification) override;
         virtual Core::hresult Unregister(const Exchange::IVoiceControl::INotification* notification) override;

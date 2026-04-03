@@ -553,7 +553,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, bool& success)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["urlAll"] = urlAll;
@@ -579,18 +579,18 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, bool& success)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["language"] = language;
@@ -607,18 +607,18 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, bool& success)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["msgType"] = msgType;
@@ -641,18 +641,18 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SEND_VOICE_MESSAGE, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SEND_VOICE_MESSAGE, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::SuccessResult& result)
     {
         // Translate the deprecated API to voiceSessionRequest
         string translatedAudioFile;
@@ -673,7 +673,7 @@ namespace Plugin {
                 break;
         }
 
-        return VoiceSessionRequest(transcription, translatedAudioFile, translatedType, success);
+        return VoiceSessionRequest(transcription, translatedAudioFile, translatedType, result);
     }
 
     Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
@@ -699,7 +699,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["type"] = voiceSessionRequestTypeToString(type);
@@ -713,18 +713,18 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["sessionId"] = sessionId;
@@ -732,18 +732,18 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TERMINATE, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TERMINATE, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, bool& success)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, Exchange::SuccessResult& result)
     {
         JsonObject params;
         params["sessionId"] = sessionId;
@@ -751,14 +751,14 @@ namespace Plugin {
         string jsonParams;
         params.ToString(jsonParams);
 
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_AUDIO_STREAM_START, jsonParams, result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_AUDIO_STREAM_START, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
         return Core::ERROR_NONE;
     }
 
