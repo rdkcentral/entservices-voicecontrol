@@ -669,7 +669,7 @@ namespace Plugin {
         if (!msgPayload.empty()) {
             JsonValue payload;
             if (tryParseJsonValue(msgPayload, payload) == true) {
-                params["msgPayload"] = payload;
+                params["msgPayload"] = std::move(payload);
             } else {
                 params["msgPayload"] = msgPayload;
             }
