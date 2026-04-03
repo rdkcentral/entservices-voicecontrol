@@ -622,20 +622,20 @@ namespace Plugin {
     {
         JsonObject params;
         params["msgType"] = msgType;
-            if (!trx.empty()) {
-                params["trx"] = trx;
+        if (!trx.empty()) {
+            params["trx"] = trx;
+        }
+        if (created != 0) {
+            // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
+            params["created"] = static_cast<double>(created);
+        }
+        if (!msgPayload.empty()) {
+            JsonValue payload;
+            if (tryParseJsonValue(msgPayload, payload) == true) {
+                params["msgPayload"] = payload;
+            } else {
+                params["msgPayload"] = msgPayload;
             }
-            if (created != 0) {
-                // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
-                params["created"] = static_cast<double>(created);
-            }
-            if (!msgPayload.empty()) {
-                JsonValue payload;
-                if (tryParseJsonValue(msgPayload, payload) == true) {
-                    params["msgPayload"] = payload;
-                } else {
-                    params["msgPayload"] = msgPayload;
-                }
         }
 
         string jsonParams;
