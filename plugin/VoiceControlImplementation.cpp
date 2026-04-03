@@ -535,21 +535,58 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceStatus(string& response)
+    Core::hresult VoiceControlImplementation::GetVoiceStatus(Exchange::VoiceStatusResponse& response, Exchange::IStringIterator*& capabilities)
     {
+        capabilities = nullptr;
+
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", result);
         if (callResult != Core::ERROR_NONE) {
-            response = R"({"success":false})";
+            response.maskPii = _maskPii.load();
+            response.urlPtt.clear();
+            response.urlHf.clear();
+            response.urlMicTap.clear();
+            response.prv = false;
+            response.wwFeedback = false;
+            response.ptt.status.clear();
+            response.ff.status.clear();
+            response.mic.status.clear();
+            response.success = false;
             return Core::ERROR_NONE;
         }
 
-        // Update internal maskPii state
-        if (result.HasLabel("maskPii")) {
-            _maskPii = result["maskPii"].Boolean();
-        }
+        response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : _maskPii.load();
+        _maskPii = response.maskPii;
 
-        result.ToString(response);
+        response.urlPtt = result.HasLabel("urlPtt") ? result["urlPtt"].String() : "";
+        response.urlHf = result.HasLabel("urlHf") ? result["urlHf"].String() : "";
+        response.urlMicTap = result.HasLabel("urlMicTap") ? result["urlMicTap"].String() : "";
+        response.prv = result.HasLabel("prv") ? result["prv"].Boolean() : false;
+        response.wwFeedback = result.HasLabel("wwFeedback") ? result["wwFeedback"].Boolean() : false;
+
+        const auto populateDeviceStatus = [&result](const char label[], Exchange::DeviceStatus& deviceStatus) {
+            deviceStatus.status.clear();
+
+            if (result.HasLabel(label)) {
+                JsonObject deviceObj = result[label].Object();
+                deviceStatus.status = deviceObj.HasLabel("status") ? deviceObj["status"].String() : "";
+            }
+        };
+
+        populateDeviceStatus("ptt", response.ptt);
+        populateDeviceStatus("ff", response.ff);
+        populateDeviceStatus("mic", response.mic);
+        response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
+
+        std::list<string> capabilityList;
+        if (result.HasLabel("capabilities")) {
+            auto capabilityArray = result["capabilities"].Array();
+            for (uint16_t i = 0; i < capabilityArray.Length(); i++) {
+                capabilityList.push_back(capabilityArray[i].String());
+            }
+        }
+        capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capabilityList);
+
         return Core::ERROR_NONE;
     }
 
