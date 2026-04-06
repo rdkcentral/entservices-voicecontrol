@@ -551,6 +551,7 @@ namespace Plugin {
             response.ptt.status.clear();
             response.ff.status.clear();
             response.mic.status.clear();
+            response.mic_tap.status.clear();
             response.success = false;
             return Core::ERROR_NONE;
         }
@@ -576,6 +577,7 @@ namespace Plugin {
         populateDeviceStatus("ptt", response.ptt);
         populateDeviceStatus("ff", response.ff);
         populateDeviceStatus("mic", response.mic);
+        populateDeviceStatus("mic_tap", response.mic_tap);
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
         std::list<string> capabilityList;
