@@ -185,6 +185,10 @@ namespace Plugin {
     {
         ASSERT(notification != nullptr);
 
+            if (notification == nullptr) {
+                return Core::ERROR_BAD_REQUEST;
+            }
+
         _adminLock.Lock();
         auto it = std::find(_notifications.begin(), _notifications.end(), notification);
         if (it == _notifications.end()) {
@@ -197,7 +201,9 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::Unregister(const Exchange::IVoiceControl::INotification* notification)
     {
-        ASSERT(notification != nullptr);
+        if (notification == nullptr) {
+            return Core::ERROR_BAD_REQUEST;
+        }
 
         _adminLock.Lock();
         auto it = std::find(_notifications.begin(), _notifications.end(), notification);
