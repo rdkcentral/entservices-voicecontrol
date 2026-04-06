@@ -20,6 +20,7 @@
 #include "VoiceControl.h"
 #include "libIBusDaemon.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
 
@@ -471,6 +472,11 @@ namespace WPEFramework {
             {
                 free(call);
             }
+
+
+            uint8_t* testBuf;
+            testBuf = (uint8_t*)calloc(16, sizeof(uint8_t));
+            (void)testBuf;
 
             returnResponse(bSuccess);
         }
