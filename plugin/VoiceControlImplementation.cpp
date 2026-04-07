@@ -528,7 +528,7 @@ namespace Plugin {
 
     // ─── IVoiceControl method implementations ───
 
-    Core::hresult VoiceControlImplementation::GetApiVersionNumber(Exchange::GetApiVersionNumberResponse& response)
+    Core::hresult VoiceControlImplementation::GetApiVersionNumber(Exchange::VoiceControlGetApiVersionNumberResponse& response)
     {
         response.version = API_VERSION_NUMBER_MAJOR;
         response.success = true;
@@ -598,7 +598,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["urlAll"] = urlAll;
@@ -635,7 +635,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["language"] = language;
@@ -663,7 +663,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["msgType"] = msgType;
@@ -697,7 +697,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result)
     {
         // Translate the deprecated API to voiceSessionRequest
         string translatedAudioFile;
@@ -744,7 +744,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["type"] = voiceSessionRequestTypeToString(type);
@@ -769,7 +769,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["sessionId"] = sessionId;
@@ -788,7 +788,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, Exchange::SuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["sessionId"] = sessionId;
