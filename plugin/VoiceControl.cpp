@@ -141,7 +141,7 @@ namespace WPEFramework {
 
         void VoiceControl::iarmEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
-            LOGINFO("Event ID %u received, data: %p, len: %u.", (unsigned)eventId, data, (unsigned)len);
+            LOGINFO("Event ID %u received, data: %p, len: %u.", data, (unsigned)len);
             if (!strcmp(owner, CTRLM_MAIN_IARM_BUS_NAME))
             {
                 ctrlm_voice_iarm_event_json_t* eventData = (ctrlm_voice_iarm_event_json_t*)data;
