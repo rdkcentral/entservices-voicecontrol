@@ -109,6 +109,7 @@ namespace Plugin {
 
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
+    Core::CriticalSection VoiceControlImplementation::_instanceLock;
     VoiceControlImplementation* VoiceControlImplementation::_instance = nullptr;
 
     VoiceControlImplementation::VoiceControlImplementation()
@@ -119,13 +120,18 @@ namespace Plugin {
         , _handlersRegistered(0)
         , _maskPii(true)  // Defaults to 'true' as Configure() will load the real value
     {
+        _instanceLock.Lock();
         _instance = this;
+        _instanceLock.Unlock();
     }
 
     VoiceControlImplementation::~VoiceControlImplementation()
     {
-        DeinitializeIARM();
+        _instanceLock.Lock();
         _instance = nullptr;
+        _instanceLock.Unlock();
+
+        DeinitializeIARM();
 
         // Release any remaining notification observers to avoid leaking references
         _adminLock.Lock();
@@ -278,11 +284,14 @@ namespace Plugin {
 
     void VoiceControlImplementation::voiceEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)
     {
-        if (_instance != nullptr) {
-            _instance->iarmEventHandler(owner, eventId, data, len);
+        _instanceLock.Lock();
+        VoiceControlImplementation* instance = _instance;
+        if (instance != nullptr) {
+            instance->iarmEventHandler(owner, eventId, data, len);
         } else {
             LOGWARN("WARNING - cannot handle IARM events without a VoiceControlImplementation instance!");
         }
+        _instanceLock.Unlock();
     }
 
     void VoiceControlImplementation::iarmEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)

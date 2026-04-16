@@ -89,6 +89,7 @@ namespace Plugin {
         uint8_t _handlersRegistered;
         std::atomic<bool> _maskPii;
 
+        static Core::CriticalSection _instanceLock;
         static VoiceControlImplementation* _instance;
     };
 
