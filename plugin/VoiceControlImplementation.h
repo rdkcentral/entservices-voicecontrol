@@ -48,7 +48,7 @@ namespace Plugin {
         Core::hresult GetApiVersionNumber(Exchange::VoiceControlGetApiVersionNumberResponse& response) override;
         Core::hresult SendNotify_(const string& eventName, string& parameters) override;
         Core::hresult GetVoiceStatus(Exchange::VoiceStatusResponse& response, Exchange::IStringIterator*& capabilities) override;
-        Core::hresult ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const Exchange::OptionalBool enable, const Exchange::OptionalBool prv, const Exchange::OptionalBool wwFeedback, const string& ptt, const string& ff, const string& mic, Exchange::VoiceControlSuccessResult& result) override;
+        Core::hresult ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result) override;

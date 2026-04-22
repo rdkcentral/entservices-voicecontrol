@@ -607,30 +607,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const Exchange::OptionalBool enable, const Exchange::OptionalBool prv, const Exchange::OptionalBool wwFeedback, const string& ptt, const string& ff, const string& mic, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result)
     {
-        JsonObject params;
-        if (!urlAll.empty())    params["urlAll"] = urlAll;
-        if (!urlPtt.empty())    params["urlPtt"] = urlPtt;
-        if (!urlHf.empty())     params["urlHf"] = urlHf;
-        if (!urlMicTap.empty()) params["urlMicTap"] = urlMicTap;
-        if (enable != Exchange::OptionalBool::INVALID)    params["enable"] = (enable == Exchange::OptionalBool::TRUE);
-        if (prv != Exchange::OptionalBool::INVALID)       params["prv"] = (prv == Exchange::OptionalBool::TRUE);
-        if (wwFeedback != Exchange::OptionalBool::INVALID) params["wwFeedback"] = (wwFeedback == Exchange::OptionalBool::TRUE);
-
-        const auto addDeviceSettings = [&params](const char label[], const string& raw) {
-            if (!raw.empty()) {
-                JsonObject obj;
-                obj.FromString(raw);
-                params[label] = obj;
-            }
-        };
-        addDeviceSettings("ptt", ptt);
-        addDeviceSettings("ff", ff);
-        addDeviceSettings("mic", mic);
-
-        string jsonParams;
-        params.ToString(jsonParams);
+        // Pass the caller's JSON through unchanged — preserves all optional fields exactly as provided.
+        const string& jsonParams = payload.empty() ? string("{}") : payload;
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, iarmResult);
