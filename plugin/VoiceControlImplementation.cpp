@@ -759,10 +759,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
-        params["sessionId"] = sessionId;
+        params["sessionId"] = request.sessionId;
 
         string jsonParams;
         params.ToString(jsonParams);
@@ -778,10 +778,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionAudioStreamStartRequest& request, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
-        params["sessionId"] = sessionId;
+        params["sessionId"] = request.sessionId;
 
         string jsonParams;
         params.ToString(jsonParams);
