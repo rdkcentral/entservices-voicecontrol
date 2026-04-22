@@ -607,28 +607,27 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const bool enable, const bool prv, const bool wwFeedback, const Exchange::DeviceSettings& ptt, const Exchange::DeviceSettings& ff, const Exchange::DeviceSettings& mic, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& urlAll, const string& urlPtt, const string& urlHf, const string& urlMicTap, const Exchange::OptionalBool enable, const Exchange::OptionalBool prv, const Exchange::OptionalBool wwFeedback, const string& ptt, const string& ff, const string& mic, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
-        params["urlAll"] = urlAll;
-        params["urlPtt"] = urlPtt;
-        params["urlHf"] = urlHf;
-        params["urlMicTap"] = urlMicTap;
-        params["enable"] = enable;
-        params["prv"] = prv;
-        params["wwFeedback"] = wwFeedback;
+        if (!urlAll.empty())    params["urlAll"] = urlAll;
+        if (!urlPtt.empty())    params["urlPtt"] = urlPtt;
+        if (!urlHf.empty())     params["urlHf"] = urlHf;
+        if (!urlMicTap.empty()) params["urlMicTap"] = urlMicTap;
+        if (enable != Exchange::OptionalBool::INVALID)    params["enable"] = (enable == Exchange::OptionalBool::TRUE);
+        if (prv != Exchange::OptionalBool::INVALID)       params["prv"] = (prv == Exchange::OptionalBool::TRUE);
+        if (wwFeedback != Exchange::OptionalBool::INVALID) params["wwFeedback"] = (wwFeedback == Exchange::OptionalBool::TRUE);
 
-        JsonObject pttObj;
-        pttObj["enable"] = ptt.enable;
-        params["ptt"] = pttObj;
-
-        JsonObject ffObj;
-        ffObj["enable"] = ff.enable;
-        params["ff"] = ffObj;
-
-        JsonObject micObj;
-        micObj["enable"] = mic.enable;
-        params["mic"] = micObj;
+        const auto addDeviceSettings = [&params](const char label[], const string& raw) {
+            if (!raw.empty()) {
+                JsonObject obj;
+                obj.FromString(raw);
+                params[label] = obj;
+            }
+        };
+        addDeviceSettings("ptt", ptt);
+        addDeviceSettings("ff", ff);
+        addDeviceSettings("mic", mic);
 
         string jsonParams;
         params.ToString(jsonParams);
