@@ -778,7 +778,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionAudioStreamStartRequest& request, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
         params["sessionId"] = request.sessionId;

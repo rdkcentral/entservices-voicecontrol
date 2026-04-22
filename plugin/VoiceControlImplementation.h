@@ -55,7 +55,7 @@ namespace Plugin {
         Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
         Core::hresult VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionTerminate(const Exchange::VoiceSessionTerminateRequest& request, Exchange::VoiceControlSuccessResult& result) override;
-        Core::hresult VoiceSessionAudioStreamStart(const Exchange::VoiceSessionAudioStreamStartRequest& request, Exchange::VoiceControlSuccessResult& result) override;
+        Core::hresult VoiceSessionAudioStreamStart(const Exchange::VoiceSessionTerminateRequest& request, Exchange::VoiceControlSuccessResult& result) override;
 
         virtual Core::hresult Register(Exchange::IVoiceControl::INotification* notification) override;
         virtual Core::hresult Unregister(const Exchange::IVoiceControl::INotification* notification) override;
