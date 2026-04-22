@@ -626,7 +626,9 @@ namespace Plugin {
     Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
-        params["language"] = language;
+        if (!language.empty()) {
+            params["language"] = language;
+        }
 
         if (capabilities != nullptr) {
             JsonArray capArray;
