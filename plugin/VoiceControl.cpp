@@ -95,6 +95,20 @@ namespace Plugin {
                     _adminLock.Unlock();
 
                     Exchange::JVoiceControl::Register(*this, implementation);
+
+                    // configureVoice is @json:omit in the interface because it needs
+                    // pass-through semantics: the entire JSON-RPC params object must
+                    // be forwarded as-is to ctrlm. The generated stub would wrap it
+                    // in a "payload" key, breaking backward compatibility.
+                    Register<JsonObject, JsonObject>("configureVoice",
+                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
+                            string payload;
+                            params.ToString(payload);
+                            Exchange::VoiceControlSuccessResult result{};
+                            Core::hresult hr = _implementation->ConfigureVoice(payload, result);
+                            response["success"] = result.success;
+                            return hr;
+                        });
                 }
             }
         }
@@ -159,6 +173,7 @@ namespace Plugin {
         {
             implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);
+            Unregister("configureVoice");
 
             if (configure != nullptr) {
                 configure->Release();
