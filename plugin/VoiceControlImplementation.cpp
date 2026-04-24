@@ -64,36 +64,6 @@ namespace Plugin {
             }
         }
 
-        const char* voiceSessionRequestTypeToString(const Exchange::VoiceSessionRequestType type)
-        {
-            switch (type) {
-            case Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION:
-                return "ptt_transcription";
-            case Exchange::VoiceSessionRequestType::PTT_AUDIO_FILE:
-                return "ptt_audio_file";
-            case Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION:
-                return "ff_transcription";
-            case Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION:
-                return "mic_transcription";
-            case Exchange::VoiceSessionRequestType::MIC_AUDIO_FILE:
-                return "mic_audio_file";
-            case Exchange::VoiceSessionRequestType::MIC_STREAM_DEFAULT:
-                return "mic_stream_default";
-            case Exchange::VoiceSessionRequestType::MIC_STREAM_SINGLE:
-                return "mic_stream_single";
-            case Exchange::VoiceSessionRequestType::MIC_STREAM_MULTI:
-                return "mic_stream_multi";
-            case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_SINGLE:
-                return "mic_tap_stream_single";
-            case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_MULTI:
-                return "mic_tap_stream_multi";
-            case Exchange::VoiceSessionRequestType::MIC_FACTORY_TEST:
-                return "mic_factory_test";
-            default:
-                return "ptt_transcription";
-            }
-        }
-
         bool tryParseJsonValue(const string& serialized, JsonValue& value)
         {
             if (serialized.empty()) {
