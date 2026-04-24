@@ -54,6 +54,16 @@ namespace Plugin {
             return defaultValue;
         }
 
+        const char* deviceTypeToString(const Exchange::DeviceType type)
+        {
+            switch (type) {
+            case Exchange::DeviceType::PTT: return "PTT";
+            case Exchange::DeviceType::FF:  return "FF";
+            case Exchange::DeviceType::MIC: return "MIC";
+            default:                        return "PTT";
+            }
+        }
+
         const char* voiceSessionRequestTypeToString(const Exchange::VoiceSessionRequestType type)
         {
             switch (type) {
@@ -550,9 +560,9 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceStatus(Exchange::VoiceStatusResponse& response, Exchange::IStringIterator*& capabilities)
+    Core::hresult VoiceControlImplementation::GetVoiceStatus(Exchange::VoiceStatusResponse& response)
     {
-        capabilities = nullptr;
+        LOGINFO("params={}");
 
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_STATUS, "{}", result);
@@ -567,6 +577,7 @@ namespace Plugin {
             response.ff.status.clear();
             response.mic.status.clear();
             response.micTap.status.clear();
+            response.capabilities = "[]";
             response.success = false;
             return Core::ERROR_NONE;
         }
@@ -595,20 +606,19 @@ namespace Plugin {
         populateDeviceStatus("mic_tap", response.micTap);
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
-        std::list<string> capabilityList;
         if (result.HasLabel("capabilities")) {
             auto capabilityArray = result["capabilities"].Array();
-            for (uint16_t i = 0; i < capabilityArray.Length(); i++) {
-                capabilityList.push_back(capabilityArray[i].String());
-            }
+            capabilityArray.ToString(response.capabilities);
+        } else {
+            response.capabilities = "[]";
         }
-        capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capabilityList);
 
         return Core::ERROR_NONE;
     }
 
     Core::hresult VoiceControlImplementation::ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
         // Pass the caller's JSON through unchanged — preserves all optional fields exactly as provided.
         const string& jsonParams = payload.empty() ? string("{}") : payload;
 
@@ -625,6 +635,9 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: language=%s, capabilities=%s",
+                language.empty() ? "<not set>" : language.c_str(),
+                (capabilities != nullptr) ? "<provided>" : "<not set>");
         JsonObject params;
         if (!language.empty()) {
             params["language"] = language;
@@ -655,6 +668,11 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: msgType=%s, trx=%s, created=%llu, msgPayload=%s",
+                msgType.c_str(),
+                trx.empty() ? "<not set>" : trx.c_str(),
+                (unsigned long long)created,
+                msgPayload.empty() ? "<not set>" : (_maskPii ? "<***>" : msgPayload.c_str()));
         JsonObject params;
         params["msgType"] = msgType;
         if (!trx.empty()) {
@@ -689,6 +707,9 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: transcription=%s, type=%s",
+                _maskPii ? "<***>" : transcription.c_str(),
+                deviceTypeToString(type));
         // Translate the deprecated API to voiceSessionRequest
         string translatedAudioFile;
         Exchange::VoiceSessionRequestType translatedType;
@@ -713,6 +734,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
     {
+        LOGINFO("params={}");
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", result);
         if (callResult != Core::ERROR_NONE) {
@@ -736,6 +758,10 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: type=%s, transcription=%s, audioFile=%s",
+                voiceSessionRequestTypeToString(type),
+                transcription.empty() ? "<not set>" : (_maskPii ? "<***>" : transcription.c_str()),
+                audioFile.empty() ? "<not set>" : audioFile.c_str());
         JsonObject params;
         params["type"] = voiceSessionRequestTypeToString(type);
         if (!transcription.empty()) {
@@ -761,6 +787,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: sessionId=%s", sessionId.c_str());
         JsonObject params;
         params["sessionId"] = sessionId;
 
@@ -780,6 +807,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::VoiceSessionAudioStreamStart(const string& sessionId, Exchange::VoiceControlSuccessResult& result)
     {
+        LOGINFO("params: sessionId=%s", sessionId.c_str());
         JsonObject params;
         params["sessionId"] = sessionId;
 
