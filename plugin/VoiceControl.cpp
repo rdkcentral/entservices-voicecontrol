@@ -109,6 +109,35 @@ namespace Plugin {
                             response["success"] = result.success;
                             return hr;
                         });
+
+                    // setVoiceInit is @json:omit for the same reason: the old plugin
+                    // forwarded the entire init JSON (roles, transmissionProtocol,
+                    // capabilities, clientProfile, vrexFields, id, etc.) unchanged
+                    // to ctrlm. The typed interface would only pass language +
+                    // capabilities, stripping fields vrex requires.
+                    Register<JsonObject, JsonObject>("setVoiceInit",
+                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
+                            string payload;
+                            params.ToString(payload);
+                            Exchange::VoiceControlSuccessResult result{};
+                            Core::hresult hr = _implementation->SetVoiceInit(payload, result);
+                            response["success"] = result.success;
+                            return hr;
+                        });
+
+                    // voiceSessionRequest is @json:omit because the old plugin
+                    // forwarded the full params (audio_file, audio_format, name,
+                    // type, transcription) unchanged and returned the full ctrlm
+                    // result (success + sessionId) unchanged.
+                    Register<JsonObject, JsonObject>("voiceSessionRequest",
+                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
+                            string payload;
+                            params.ToString(payload);
+                            string rawResult;
+                            Core::hresult hr = _implementation->VoiceSessionRequest(payload, rawResult);
+                            response.FromString(rawResult);
+                            return hr;
+                        });
                 }
             }
         }
@@ -174,6 +203,8 @@ namespace Plugin {
             implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);
             Unregister("configureVoice");
+            Unregister("setVoiceInit");
+            Unregister("voiceSessionRequest");
 
             if (configure != nullptr) {
                 configure->Release();

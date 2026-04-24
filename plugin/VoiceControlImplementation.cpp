@@ -633,27 +633,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& language, Exchange::IStringIterator* const capabilities, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result)
     {
-        LOGINFO("params: language=%s, capabilities=%s",
-                language.empty() ? "<not set>" : language.c_str(),
-                (capabilities != nullptr) ? "<provided>" : "<not set>");
-        JsonObject params;
-        if (!language.empty()) {
-            params["language"] = language;
-        }
-
-        if (capabilities != nullptr) {
-            JsonArray capArray;
-            string cap;
-            while (capabilities->Next(cap)) {
-                capArray.Add(Core::JSON::Variant(cap));
-            }
-            params["capabilities"] = capArray;
-        }
-
-        string jsonParams;
-        params.ToString(jsonParams);
+        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
+        const string& jsonParams = payload.empty() ? string("{}") : payload;
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, iarmResult);
@@ -711,25 +694,41 @@ namespace Plugin {
                 _maskPii ? "<***>" : transcription.c_str(),
                 deviceTypeToString(type));
         // Translate the deprecated API to voiceSessionRequest
-        string translatedAudioFile;
-        Exchange::VoiceSessionRequestType translatedType;
+        const char* translatedType;
 
         switch (type) {
             case Exchange::DeviceType::PTT:
-                translatedType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
+                translatedType = "ptt_transcription";
                 break;
             case Exchange::DeviceType::FF:
-                translatedType = Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION;
+                translatedType = "ff_transcription";
                 break;
             case Exchange::DeviceType::MIC:
-                translatedType = Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION;
+                translatedType = "mic_transcription";
                 break;
             default:
-                translatedType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
+                translatedType = "ptt_transcription";
                 break;
         }
 
-        return VoiceSessionRequest(transcription, translatedAudioFile, translatedType, result);
+        JsonObject params;
+        params["type"] = translatedType;
+        if (!transcription.empty()) {
+            params["transcription"] = transcription;
+        }
+        string payload;
+        params.ToString(payload);
+
+        string rawResult;
+        Core::hresult hr = VoiceSessionRequest(payload, rawResult);
+        if (hr == Core::ERROR_NONE) {
+            JsonObject parsed;
+            parsed.FromString(rawResult);
+            result.success = parsed.HasLabel("success") ? parsed["success"].Boolean() : false;
+        } else {
+            result.success = false;
+        }
+        return hr;
     }
 
     Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
@@ -756,32 +755,19 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& transcription, const string& audioFile, const Exchange::VoiceSessionRequestType type, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& payload, string& result)
     {
-        LOGINFO("params: type=%s, transcription=%s, audioFile=%s",
-                voiceSessionRequestTypeToString(type),
-                transcription.empty() ? "<not set>" : (_maskPii ? "<***>" : transcription.c_str()),
-                audioFile.empty() ? "<not set>" : audioFile.c_str());
-        JsonObject params;
-        params["type"] = voiceSessionRequestTypeToString(type);
-        if (!transcription.empty()) {
-            params["transcription"] = transcription;
-        }
-        if (!audioFile.empty()) {
-            params["audioFile"] = audioFile;
-        }
-
-        string jsonParams;
-        params.ToString(jsonParams);
+        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
+        const string& jsonParams = payload.empty() ? string("{}") : payload;
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            result.success = false;
+            result = "{\"success\":false}";
             return Core::ERROR_NONE;
         }
 
-        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
+        iarmResult.ToString(result);
         return Core::ERROR_NONE;
     }
 
