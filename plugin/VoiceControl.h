@@ -79,23 +79,49 @@ namespace Plugin {
             explicit Notification(VoiceControl* parent) : _parent(*parent) {}
             ~Notification() override = default;
 
-            void OnSessionBegin(const Exchange::SessionBeginEvent& event) override {
-                Exchange::JVoiceControl::Event::OnSessionBegin(_parent, event);
+            void OnSessionBegin(const uint32_t remoteId, const string& sessionId, const Exchange::DeviceType deviceType, const bool keywordVerification) override {
+                Exchange::JVoiceControl::Event::OnSessionBegin(_parent, remoteId, sessionId, deviceType, keywordVerification);
             }
-            void OnStreamBegin(const Exchange::StreamBeginEvent& event) override {
-                Exchange::JVoiceControl::Event::OnStreamBegin(_parent, event);
+            void OnStreamBegin(const uint32_t remoteId, const string& sessionId) override {
+                Exchange::JVoiceControl::Event::OnStreamBegin(_parent, remoteId, sessionId);
             }
-            void OnKeywordVerification(const Exchange::KeywordVerificationEvent& event) override {
-                Exchange::JVoiceControl::Event::OnKeywordVerification(_parent, event);
+            void OnKeywordVerification(const uint32_t remoteId, const string& sessionId, const bool verified) override {
+                Exchange::JVoiceControl::Event::OnKeywordVerification(_parent, remoteId, sessionId, verified);
             }
-            void OnServerMessage(const Exchange::ServerMessageEvent& event) override {
-                Exchange::JVoiceControl::Event::OnServerMessage(_parent, event);
+            void OnServerMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload) override {
+                Exchange::JVoiceControl::Event::OnServerMessage(_parent, msgType, trx, created, msgPayload);
             }
-            void OnStreamEnd(const Exchange::StreamEndEvent& event) override {
-                Exchange::JVoiceControl::Event::OnStreamEnd(_parent, event);
+            void OnStreamEnd(const uint32_t remoteId, const string& sessionId, const uint8_t reason) override {
+                Exchange::JVoiceControl::Event::OnStreamEnd(_parent, remoteId, sessionId, reason);
             }
-            void OnSessionEnd(const Exchange::SessionEndEvent& event) override {
-                Exchange::JVoiceControl::Event::OnSessionEnd(_parent, event);
+            void OnSessionEnd(const uint32_t remoteId, const string& sessionId, const Exchange::SessionResult result, const Exchange::ServerStats& serverStats, const string& success, const string& error, const string& abort, const string& shortUtterance, const string& stbStats) override {
+                // Build params directly so optional opaque fields are only included when non-empty
+                JsonData::VoiceControl::OnSessionEndParamsData params;
+                params.RemoteId = remoteId;
+                params.SessionId = sessionId;
+                params.Result = result;
+                params.ServerStats = serverStats;
+                if (!success.empty()) {
+                    params.Success = success;
+                    params.Success.SetQuoted(false);
+                }
+                if (!error.empty()) {
+                    params.Error = error;
+                    params.Error.SetQuoted(false);
+                }
+                if (!abort.empty()) {
+                    params.Abort = abort;
+                    params.Abort.SetQuoted(false);
+                }
+                if (!shortUtterance.empty()) {
+                    params.ShortUtterance = shortUtterance;
+                    params.ShortUtterance.SetQuoted(false);
+                }
+                if (!stbStats.empty()) {
+                    params.StbStats = stbStats;
+                    params.StbStats.SetQuoted(false);
+                }
+                Exchange::JVoiceControl::Event::OnSessionEnd(_parent, params);
             }
 
             BEGIN_INTERFACE_MAP(Notification)

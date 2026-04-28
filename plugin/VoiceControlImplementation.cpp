@@ -35,12 +35,12 @@ namespace Plugin {
         template <typename E>
         E stringToEnum(const string& str, E defaultValue);
 
-        // --- DeviceType: ctrlm sends uppercase "PTT"/"FF"/"MIC" ---
+        // --- DeviceType: ctrlm sends lowercase "ptt"/"ff"/"mic" ---
         template <>
         Exchange::DeviceType stringToEnum<Exchange::DeviceType>(const string& str, Exchange::DeviceType defaultValue) {
-            if (str == "PTT") return Exchange::DeviceType::PTT;
-            if (str == "FF")  return Exchange::DeviceType::FF;
-            if (str == "MIC") return Exchange::DeviceType::MIC;
+            if (str == "ptt") return Exchange::DeviceType::PTT;
+            if (str == "ff")  return Exchange::DeviceType::FF;
+            if (str == "mic") return Exchange::DeviceType::MIC;
             return defaultValue;
         }
 
@@ -57,10 +57,10 @@ namespace Plugin {
         const char* deviceTypeToString(const Exchange::DeviceType type)
         {
             switch (type) {
-            case Exchange::DeviceType::PTT: return "PTT";
-            case Exchange::DeviceType::FF:  return "FF";
-            case Exchange::DeviceType::MIC: return "MIC";
-            default:                        return "PTT";
+            case Exchange::DeviceType::PTT: return "ptt";
+            case Exchange::DeviceType::FF:  return "ff";
+            case Exchange::DeviceType::MIC: return "mic";
+            default:                        return "ptt";
             }
         }
 
@@ -169,14 +169,12 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::Register(Exchange::IVoiceControl::INotification* notification)
     {
-        ASSERT(notification != nullptr);
-
-            if (notification == nullptr) {
-                return Core::ERROR_BAD_REQUEST;
-            }
+        if (notification == nullptr) {
+            return Core::ERROR_BAD_REQUEST;
+        }
 
         _adminLock.Lock();
-        auto it = std::find(_notifications.begin(), _notifications.end(), notification);
+        const auto it = std::find(_notifications.begin(), _notifications.end(), notification);
         if (it == _notifications.end()) {
             notification->AddRef();
             _notifications.push_back(notification);
@@ -192,7 +190,7 @@ namespace Plugin {
         }
 
         _adminLock.Lock();
-        auto it = std::find(_notifications.begin(), _notifications.end(), notification);
+        const auto it = std::find(_notifications.begin(), _notifications.end(), notification);
         if (it != _notifications.end()) {
             (*it)->Release();
             _notifications.erase(it);
@@ -205,7 +203,7 @@ namespace Plugin {
 
     bool VoiceControlImplementation::InitializeIARM()
     {
-        bool alreadyConnected = Utils::IARM::isConnected();
+        const bool alreadyConnected = Utils::IARM::isConnected();
         if (Utils::IARM::init()) {
             _hasOwnProcess = !alreadyConnected;
             IARM_Result_t res;
@@ -360,16 +358,15 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onSessionBegin %s", eventData->payload);
 
-        Exchange::SessionBeginEvent event;
-        event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
-        event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.deviceType = params.HasLabel("deviceType") ? stringToEnum<Exchange::DeviceType>(params["deviceType"].String(), Exchange::DeviceType::PTT) : Exchange::DeviceType::PTT;
-        event.keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
+        const uint32_t remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
+        const string sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
+        const Exchange::DeviceType deviceType = params.HasLabel("deviceType") ? stringToEnum<Exchange::DeviceType>(params["deviceType"].String(), Exchange::DeviceType::PTT) : Exchange::DeviceType::PTT;
+        const bool keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnSessionBegin(event);
+            notification->OnSessionBegin(remoteId, sessionId, deviceType, keywordVerification);
         }
 
         ReleaseObserverSnapshot(observers);
@@ -381,14 +378,13 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onStreamBegin %s", eventData->payload);
 
-        Exchange::StreamBeginEvent event;
-        event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
-        event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
+        const uint32_t remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
+        const string sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnStreamBegin(event);
+            notification->OnStreamBegin(remoteId, sessionId);
         }
 
         ReleaseObserverSnapshot(observers);
@@ -400,15 +396,14 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onKeywordVerification %s", eventData->payload);
 
-        Exchange::KeywordVerificationEvent event;
-        event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
-        event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.verified = params.HasLabel("verified") ? params["verified"].Boolean() : false;
+        const uint32_t remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
+        const string sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
+        const bool verified = params.HasLabel("verified") ? params["verified"].Boolean() : false;
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnKeywordVerification(event);
+            notification->OnKeywordVerification(remoteId, sessionId, verified);
         }
 
         ReleaseObserverSnapshot(observers);
@@ -420,20 +415,19 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onServerMessage %s", _maskPii ? "<***>" : eventData->payload);
 
-        Exchange::ServerMessageEvent event;
-        event.msgType = params.HasLabel("msgType") ? params["msgType"].String() : "";
-        event.trx = params.HasLabel("trx") ? params["trx"].String() : "";
-        event.created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
-        event.msgPayload = params.HasLabel("msgPayload") ? jsonValueToString(params["msgPayload"]) : "";
+        const string msgType = params.HasLabel("msgType") ? params["msgType"].String() : "";
+        const string trx = params.HasLabel("trx") ? params["trx"].String() : "";
+        const uint64_t created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
+        string msgPayload = params.HasLabel("msgPayload") ? jsonValueToString(params["msgPayload"]) : "";
         if (_maskPii) {
             // Redact payload when PII masking is enabled to avoid exposing sensitive data to observers.
-            event.msgPayload.clear();
+            msgPayload.clear();
         }
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnServerMessage(event);
+            notification->OnServerMessage(msgType, trx, created, msgPayload);
         }
 
         ReleaseObserverSnapshot(observers);
@@ -445,15 +439,14 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onStreamEnd %s", eventData->payload);
 
-        Exchange::StreamEndEvent event;
-        event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
-        event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.reason = params.HasLabel("reason") ? static_cast<uint8_t>(params["reason"].Number()) : 0;
+        const uint32_t remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
+        const string sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
+        const uint8_t reason = params.HasLabel("reason") ? static_cast<uint8_t>(params["reason"].Number()) : 0;
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnStreamEnd(event);
+            notification->OnStreamEnd(remoteId, sessionId, reason);
         }
 
         ReleaseObserverSnapshot(observers);
@@ -465,23 +458,51 @@ namespace Plugin {
         params.FromString(eventData->payload);
         LOGINFO("Notify onSessionEnd %s", _maskPii ? "<***>" : eventData->payload);
 
-        Exchange::SessionEndEvent event;
-        event.remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
-        event.sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
-        event.result = params.HasLabel("result") ? stringToEnum<Exchange::SessionResult>(params["result"].String(), Exchange::SessionResult::ERROR) : Exchange::SessionResult::ERROR;
+        const uint32_t remoteId = params.HasLabel("remoteId") ? static_cast<uint32_t>(params["remoteId"].Number()) : 0;
+        const string sessionId = params.HasLabel("sessionId") ? params["sessionId"].String() : "";
+        const Exchange::SessionResult result = params.HasLabel("result") ? stringToEnum<Exchange::SessionResult>(params["result"].String(), Exchange::SessionResult::ERROR) : Exchange::SessionResult::ERROR;
 
+        Exchange::ServerStats serverStats{};
         if (params.HasLabel("serverStats")) {
             JsonObject statsObj = params["serverStats"].Object();
-            event.serverStats.dnsTime = statsObj.HasLabel("dnsTime") ? statsObj["dnsTime"].Double() : 0.0;
+            serverStats.dnsTime = statsObj.HasLabel("dnsTime") ? statsObj["dnsTime"].Double() : 0.0;
             // When PII masking is enabled, avoid propagating server IP to observers.
-            event.serverStats.serverIp = (!_maskPii && statsObj.HasLabel("serverIp")) ? statsObj["serverIp"].String() : "";
-            event.serverStats.connectTime = statsObj.HasLabel("connectTime") ? statsObj["connectTime"].Double() : 0.0;
+            serverStats.serverIp = (!_maskPii && statsObj.HasLabel("serverIp")) ? statsObj["serverIp"].String() : "";
+            serverStats.connectTime = statsObj.HasLabel("connectTime") ? statsObj["connectTime"].Double() : 0.0;
+        }
+
+        // Extract result-specific subobjects and stbStats as raw JSON strings for passthrough
+        string successData;
+        string errorData;
+        string abortData;
+        string shortUtteranceData;
+        string stbStatsData;
+
+        if (params.HasLabel("success")) {
+            JsonObject obj = params["success"].Object();
+            obj.ToString(successData);
+        }
+        if (params.HasLabel("error")) {
+            JsonObject obj = params["error"].Object();
+            obj.ToString(errorData);
+        }
+        if (params.HasLabel("abort")) {
+            JsonObject obj = params["abort"].Object();
+            obj.ToString(abortData);
+        }
+        if (params.HasLabel("shortUtterance")) {
+            JsonObject obj = params["shortUtterance"].Object();
+            obj.ToString(shortUtteranceData);
+        }
+        if (params.HasLabel("stbStats")) {
+            JsonObject obj = params["stbStats"].Object();
+            obj.ToString(stbStatsData);
         }
 
         auto observers = ObserverSnapshot();
 
         for (auto* notification : observers) {
-            notification->OnSessionEnd(event);
+            notification->OnSessionEnd(remoteId, sessionId, result, serverStats, successData, errorData, abortData, shortUtteranceData, stbStatsData);
         }
 
         ReleaseObserverSnapshot(observers);
