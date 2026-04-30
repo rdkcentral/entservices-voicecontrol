@@ -178,6 +178,7 @@ namespace Plugin {
         if (it == _notifications.end()) {
             notification->AddRef();
             _notifications.push_back(notification);
+            LOGINFO("[VCDiag] Register INotification observer: totalObservers=%zu", _notifications.size());
         }
         _adminLock.Unlock();
         return Core::ERROR_NONE;
@@ -194,6 +195,7 @@ namespace Plugin {
         if (it != _notifications.end()) {
             (*it)->Release();
             _notifications.erase(it);
+            LOGINFO("[VCDiag] Unregister INotification observer: totalObservers=%zu", _notifications.size());
         }
         _adminLock.Unlock();
         return Core::ERROR_NONE;
@@ -298,27 +300,27 @@ namespace Plugin {
 
         switch (eventId) {
             case CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_SESSION_BEGIN event.");
                 NotifySessionBegin(eventData);
                 break;
             case CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_STREAM_BEGIN event.");
                 NotifyStreamBegin(eventData);
                 break;
             case CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_KEYWORD_VERIFICATION event.");
                 NotifyKeywordVerification(eventData);
                 break;
             case CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_SERVER_MESSAGE event.");
                 NotifyServerMessage(eventData);
                 break;
             case CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_STREAM_END event.");
                 NotifyStreamEnd(eventData);
                 break;
             case CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END:
-                LOGWARN("Got CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END event.");
+                LOGINFO("Got CTRLM_VOICE_IARM_EVENT_JSON_SESSION_END event.");
                 NotifySessionEnd(eventData);
                 break;
             default:
@@ -364,6 +366,8 @@ namespace Plugin {
         const bool keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
 
         auto observers = ObserverSnapshot();
+        LOGINFO("[VCDiag] NotifySessionBegin: observerCount=%zu remoteId=%u sessionId=%s deviceType=%d",
+                observers.size(), remoteId, sessionId.c_str(), static_cast<int>(deviceType));
 
         for (auto* notification : observers) {
             notification->OnSessionBegin(remoteId, sessionId, deviceType, keywordVerification);
@@ -425,6 +429,10 @@ namespace Plugin {
         }
 
         auto observers = ObserverSnapshot();
+        LOGINFO("[VCDiag] NotifyServerMessage: observerCount=%zu msgType=%s trx=%s payloadLen=%zu", observers.size(), msgType.c_str(), trx.c_str(), msgPayload.size());
+        if (msgType == "vrexResponse" && !_maskPii && msgPayload.size() > 0) {
+            LOGINFO("[VCDiag] vrexResponse payload (first 200): %.200s", msgPayload.c_str());
+        }
 
         for (auto* notification : observers) {
             notification->OnServerMessage(msgType, trx, created, msgPayload);
@@ -500,6 +508,8 @@ namespace Plugin {
         }
 
         auto observers = ObserverSnapshot();
+        LOGINFO("[VCDiag] NotifySessionEnd: observerCount=%zu sessionId=%s result=%d successLen=%zu errorLen=%zu",
+                observers.size(), sessionId.c_str(), static_cast<int>(result), successData.size(), errorData.size());
 
         for (auto* notification : observers) {
             notification->OnSessionEnd(remoteId, sessionId, result, serverStats, successData, errorData, abortData, shortUtteranceData, stbStatsData);

@@ -134,6 +134,13 @@ namespace Plugin {
 
         void Deactivated(RPC::IRemoteConnection* connection);
 
+        // Override to log JSON-RPC event subscriptions for diagnostics
+        uint32_t ProcessSubscribe(const uint32_t channelId, const string& eventId, const string& designator) override
+        {
+            LOGINFO("[VCDiag] JSON-RPC Subscribe: channel=%u event=%s designator=%s", channelId, eventId.c_str(), designator.c_str());
+            return PluginHost::JSONRPC::DoSubscribe(channelId, eventId, designator);
+        }
+
         Core::CriticalSection _adminLock;
         Exchange::IVoiceControl* _implementation;
         uint32_t _connectionId;
