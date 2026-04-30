@@ -663,8 +663,11 @@ namespace Plugin {
             params["trx"] = trx;
         }
         if (created != 0) {
-            // created is a uint64_t (Unix timestamp in ms). Casting to double preserves full precision for all realistic timestamps (~1.7e12 ms today, well below the 2^53 limit).
-            params["created"] = static_cast<double>(created);
+            // Core::JSON::Variant has no uint64_t overload; an uncast uint64_t would
+            // be implicitly converted to double and serialized as scientific notation
+            // (e.g. 1.77757e+12). int64_t has a direct overload and serializes as an
+            // exact integer, which is what the voice server expects.
+            params["created"] = static_cast<int64_t>(created);
         }
         if (!msgPayload.empty()) {
             JsonValue payload;
