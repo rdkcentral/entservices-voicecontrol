@@ -100,7 +100,11 @@ namespace Plugin {
                 params.RemoteId = remoteId;
                 params.SessionId = sessionId;
                 params.Result = result;
-                params.ServerStats = serverStats;
+                // Only include serverStats when the session completed (success/error).
+                // Abort events from ctrlm never include serverStats in the wire format.
+                if (result != Exchange::SessionResult::ABORT) {
+                    params.ServerStats = serverStats;
+                }
                 if (!success.empty()) {
                     params.Success = success;
                     params.Success.SetQuoted(false);
