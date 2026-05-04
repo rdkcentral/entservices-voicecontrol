@@ -85,6 +85,18 @@ namespace Plugin {
             // this Thunder version but has no reachable definition.
             return value.String();
         }
+
+        // Logs an error if 'value' exceeds the COM-RPC @restrict limit for 
+        // 'fieldName'. The limit must match the @restrict annotation on the
+        // corresponding parameter in IVoiceControl.h so that the generated proxy
+        // stub's SetText<T> cast never silently discards bytes.
+        void checkRestrictLimit(string& value, size_t limit, const char* fieldName)
+        {
+            if (value.size() > limit) {
+                LOGERR("COM-RPC field '%s' exceeds @restrict limit: %zu > %zu bytes — truncating", fieldName, value.size(), limit);
+                value.resize(limit);
+            }
+        }
     } // anonymous namespace
 
     SERVICE_REGISTRATION(VoiceControlImplementation, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
@@ -178,7 +190,7 @@ namespace Plugin {
         if (it == _notifications.end()) {
             notification->AddRef();
             _notifications.push_back(notification);
-            LOGINFO("[VCDiag] Register INotification observer: totalObservers=%zu", _notifications.size());
+            LOGINFO("Register INotification observer: totalObservers=%zu", _notifications.size());
         }
         _adminLock.Unlock();
         return Core::ERROR_NONE;
@@ -195,7 +207,7 @@ namespace Plugin {
         if (it != _notifications.end()) {
             (*it)->Release();
             _notifications.erase(it);
-            LOGINFO("[VCDiag] Unregister INotification observer: totalObservers=%zu", _notifications.size());
+            LOGINFO("Unregister INotification observer: totalObservers=%zu", _notifications.size());
         }
         _adminLock.Unlock();
         return Core::ERROR_NONE;
@@ -366,7 +378,7 @@ namespace Plugin {
         const bool keywordVerification = params.HasLabel("keywordVerification") ? params["keywordVerification"].Boolean() : false;
 
         auto observers = ObserverSnapshot();
-        LOGINFO("[VCDiag] NotifySessionBegin: observerCount=%zu remoteId=%u sessionId=%s deviceType=%d",
+        LOGINFO("NotifySessionBegin: observerCount=%zu remoteId=%u sessionId=%s deviceType=%d",
                 observers.size(), remoteId, sessionId.c_str(), static_cast<int>(deviceType));
 
         for (auto* notification : observers) {
@@ -428,10 +440,13 @@ namespace Plugin {
             msgPayload.clear();
         }
 
+        // @restrict:256K on OnServerMessage.msgPayload — log and clamp before dispatch
+        checkRestrictLimit(msgPayload, 256 * 1024, "OnServerMessage.msgPayload");
+
         auto observers = ObserverSnapshot();
-        LOGINFO("[VCDiag] NotifyServerMessage: observerCount=%zu msgType=%s trx=%s payloadLen=%zu", observers.size(), msgType.c_str(), trx.c_str(), msgPayload.size());
+        LOGINFO("NotifyServerMessage: observerCount=%zu msgType=%s trx=%s payloadLen=%zu", observers.size(), msgType.c_str(), trx.c_str(), msgPayload.size());
         if (msgType == "vrexResponse" && !_maskPii && msgPayload.size() > 0) {
-            LOGINFO("[VCDiag] vrexResponse payload (first 200): %.200s", msgPayload.c_str());
+            LOGINFO("vrexResponse payload (first 200): %.200s", msgPayload.c_str());
         }
 
         for (auto* notification : observers) {
@@ -508,7 +523,7 @@ namespace Plugin {
         }
 
         auto observers = ObserverSnapshot();
-        LOGINFO("[VCDiag] NotifySessionEnd: observerCount=%zu sessionId=%s result=%d successLen=%zu errorLen=%zu",
+        LOGINFO("NotifySessionEnd: observerCount=%zu sessionId=%s result=%d successLen=%zu errorLen=%zu",
                 observers.size(), sessionId.c_str(), static_cast<int>(result), successData.size(), errorData.size());
 
         for (auto* notification : observers) {
@@ -772,6 +787,11 @@ namespace Plugin {
         }
 
         iarmResult.ToString(result);
+
+        // VoiceSessionRequest.result is @out @opaque with no @restrict — the generated
+        // stub's SetText<uint16_t> will silently truncate anything over 65535 bytes.
+        checkRestrictLimit(result, 65535, "VoiceSessionRequest.result");
+
         return Core::ERROR_NONE;
     }
 
