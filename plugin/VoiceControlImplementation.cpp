@@ -570,12 +570,6 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendNotify_(const string& /* eventName */, string& /* parameters */)
-    {
-        // This method is omitted from JSON-RPC (@json:omit) and not used in the OOP architecture.
-        return Core::ERROR_NONE;
-    }
-
     Core::hresult VoiceControlImplementation::GetVoiceStatus(Exchange::VoiceStatusResponse& response)
     {
         LOGINFO("params={}");

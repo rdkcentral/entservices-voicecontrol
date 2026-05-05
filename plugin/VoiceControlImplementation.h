@@ -46,7 +46,6 @@ namespace Plugin {
 
         // IVoiceControl methods
         Core::hresult GetApiVersionNumber(Exchange::VoiceControlGetApiVersionNumberResponse& response) override;
-        Core::hresult SendNotify_(const string& eventName, string& parameters) override;
         Core::hresult GetVoiceStatus(Exchange::VoiceStatusResponse& response) override;
         Core::hresult ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
