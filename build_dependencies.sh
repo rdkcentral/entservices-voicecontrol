@@ -39,8 +39,7 @@ git clone --depth 1 --branch  R4.4.3 https://github.com/rdkcentral/ThunderTools.
 
 git clone --depth 1 --branch R4.4.1 https://github.com/rdkcentral/Thunder.git
 
-# git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
-git clone --depth 1 --branch feature/RDKEMW-10727 https://github.com/rdkcentral/entservices-apis.git
+git clone --depth 1 https://github.com/rdkcentral/entservices-apis.git
 
 git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
