@@ -1,4 +1,4 @@
-# This workflow is disabled for now
+# Automatic triggers are disabled for now; this workflow can still be run manually via workflow_dispatch.
 name: update changelog and api version
 
 on:
