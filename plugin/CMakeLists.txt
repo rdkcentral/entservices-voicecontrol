@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
 #
-# Copyright 2024 RDK Management
+# Copyright 2026 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,14 @@
 
 set(PLUGIN_NAME VoiceControl)
 set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
-
-set(PLUGIN_VOICECONTROL_STARTUPORDER "" CACHE STRING "To configure startup order of VoiceControl plugin")
+set(PLUGIN_IMPLEMENTATION "${MODULE_NAME}Implementation" CACHE STRING "Library with VoiceControl implementation")
+set(PLUGIN_VOICECONTROL_MODE "Local" CACHE STRING "Controls if the plugin should run in its own process, in process or remote.")
 
 find_package(${NAMESPACE}Plugins REQUIRED)
+find_package(${NAMESPACE}Definitions REQUIRED)
 find_package(${NAMESPACE}Core REQUIRED)
+find_package(CTRLM REQUIRED)
+find_package(IARMBus)
 
 if (USE_THUNDER_R4)
     find_package(${NAMESPACE}COM REQUIRED)
@@ -32,11 +35,11 @@ else()
     find_package(${NAMESPACE}Protocols REQUIRED)
 endif()
 
-# TODO: Add test directory containing tests
 if (BUILD_TESTS)
     add_subdirectory(test)
 endif(BUILD_TESTS)
 
+## Plugin library (loaded by Thunder framework — thin JSON-RPC + COM-RPC shell)
 add_library(${MODULE_NAME} SHARED
         VoiceControl.cpp
         Module.cpp)
@@ -46,19 +49,30 @@ set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
+target_link_libraries(${MODULE_NAME} PRIVATE
+        ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+        ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
 
-find_package(CTRLM)
-if (CTRLM_FOUND)
-    find_package(IARMBus)
-    add_definitions(-DCTRLM_FOUND)
-    target_include_directories(${MODULE_NAME} PRIVATE ${IARMBUS_INCLUDE_DIRS})
-    target_include_directories(${MODULE_NAME} PRIVATE ${CTRLM_INCLUDE_DIRS})
-    target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES})
-else (CTRLM_FOUND)
-    target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
-endif(CTRLM_FOUND)
+add_library(${PLUGIN_IMPLEMENTATION} SHARED
+        VoiceControlImplementation.cpp
+        Module.cpp)
 
-install(TARGETS ${MODULE_NAME}
+set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED YES)
+
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
+
+target_compile_definitions(${PLUGIN_IMPLEMENTATION} PRIVATE CTRLM_FOUND)
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CTRLM_INCLUDE_DIRS})
+target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE
+        ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+        ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
+
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS})
+target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_LIBRARIES})
+
+install(TARGETS ${MODULE_NAME} ${PLUGIN_IMPLEMENTATION}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
-write_config(${PLUGIN_NAME})
+write_config(PLUGINS ${PLUGIN_NAME} CLASSNAME ${PLUGIN_NAME})
