@@ -4,10 +4,8 @@ permissions:
   contents: write
   
 on:
-  pull_request:
-    types: [opened, edited, ready_for_review, closed]
-    branches:
-      - develop
+  workflow_dispatch:
+
 
 jobs:
   validate-version:

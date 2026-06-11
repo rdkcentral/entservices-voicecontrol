@@ -1,13 +1,8 @@
+# Automatic triggers are disabled for now; this workflow can still be run manually via workflow_dispatch.
 name: update changelog and api version
 
 on:
-  push:
-    branches: [ main, 'release/**' ]
-    paths-ignore: ['docs/**', 'Tests/**', 'Tools/**', '.github/**']
-
-  pull_request:
-    branches: [ main, 'release/**' ]
-    paths-ignore: ['docs/**', 'Tests/**', 'Tools/**', '.github/**']
+  workflow_dispatch:
 
 
 jobs:
