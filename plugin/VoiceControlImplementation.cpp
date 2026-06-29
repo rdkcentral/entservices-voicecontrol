@@ -557,12 +557,7 @@ namespace Plugin {
         }
 
         result.FromString(call->result);
-        const bool hasSuccess = result.HasLabel("success");
-        const bool success = hasSuccess ? result["success"].Boolean() : false;
-        LOGINFO("%s Bus Call SUCCESS (hasSuccess=%s, success=%s)",
-                method.c_str(),
-                hasSuccess ? "true" : "false",
-                success ? "true" : "false");
+        LOGINFO("%s Bus Call SUCCESS response=%s", method.c_str(), call->result);
         free(call);
         return Core::ERROR_NONE;
     }
