@@ -104,9 +104,11 @@ namespace Plugin {
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
                             params.ToString(payload);
+                            LOGINFO("configureVoice paramsLen=%zu", payload.size());
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->ConfigureVoice(payload, result);
                             response["success"] = result.success;
+                            LOGINFO("configureVoice result: hr=%u success=%s", hr, result.success ? "true" : "false");
                             return hr;
                         });
 
@@ -119,9 +121,11 @@ namespace Plugin {
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
                             params.ToString(payload);
+                            LOGINFO("setVoiceInit paramsLen=%zu", payload.size());
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->SetVoiceInit(payload, result);
                             response["success"] = result.success;
+                            LOGINFO("setVoiceInit result: hr=%u success=%s", hr, result.success ? "true" : "false");
                             return hr;
                         });
 
@@ -133,9 +137,11 @@ namespace Plugin {
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
                             params.ToString(payload);
+                            LOGINFO("voiceSessionRequest paramsLen=%zu", payload.size());
                             string rawResult;
                             Core::hresult hr = _implementation->VoiceSessionRequest(payload, rawResult);
                             response.FromString(rawResult);
+                            LOGINFO("voiceSessionRequest result: hr=%u resultLen=%zu", hr, rawResult.size());
                             return hr;
                         });
                 }
