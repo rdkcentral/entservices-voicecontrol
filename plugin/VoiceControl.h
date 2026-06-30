@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Module.h"
+#include "UtilsLogging.h"
 #include <interfaces/IVoiceControl.h>
 #include <interfaces/json/JVoiceControl.h>
 #include <interfaces/IConfiguration.h>
