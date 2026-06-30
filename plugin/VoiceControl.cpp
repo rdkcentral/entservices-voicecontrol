@@ -145,9 +145,7 @@ namespace Plugin {
                             string rawResult;
                             Core::hresult hr = _implementation->VoiceSessionRequest(payload, rawResult);
                             response.FromString(rawResult);
-                            string responseStr;
-                            response.ToString(responseStr);
-                            LOGINFO("voiceSessionRequest result: hr=%u response=%s", hr, responseStr.c_str());
+                            LOGINFO("voiceSessionRequest result: hr=%u response=%s", hr, rawResult.c_str());
                             return hr;
                         });
                 }
