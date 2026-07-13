@@ -557,7 +557,7 @@ namespace Plugin {
         }
 
         result.FromString(call->result);
-        LOGINFO("%s Bus Call SUCCESS response=%s", method.c_str(), call->result);
+        LOGINFO("%s Bus Call SUCCESS response=%.200s", method.c_str(), _maskPii ? "<***>" : call->result);
         free(call);
         return Core::ERROR_NONE;
     }
