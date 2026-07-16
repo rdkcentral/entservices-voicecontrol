@@ -107,9 +107,7 @@ namespace Plugin {
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->ConfigureVoice(payload, result);
                             response["success"] = result.success;
-                            string responseStr;
-                            response.ToString(responseStr);
-                            LOGINFO("configureVoice result: hr=%u response=%s", hr, responseStr.c_str());
+                            LOGINFO("configureVoice result: hr=%u success=%s", hr, result.success ? "true" : "false");
                             return hr;
                         });
 
@@ -126,9 +124,7 @@ namespace Plugin {
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->SetVoiceInit(payload, result);
                             response["success"] = result.success;
-                            string responseStr;
-                            response.ToString(responseStr);
-                            LOGINFO("setVoiceInit result: hr=%u response=%s", hr, responseStr.c_str());
+                            LOGINFO("setVoiceInit result: hr=%u success=%s", hr, result.success ? "true" : "false");
                             return hr;
                         });
 
