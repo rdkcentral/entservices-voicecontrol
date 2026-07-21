@@ -557,6 +557,7 @@ namespace Plugin {
         }
 
         result.FromString(call->result);
+        LOGINFO("%s Bus Call SUCCESS response=%.200s", method.c_str(), _maskPii ? "<***>" : call->result);
         free(call);
         return Core::ERROR_NONE;
     }
@@ -567,6 +568,7 @@ namespace Plugin {
     {
         response.version = API_VERSION_NUMBER_MAJOR;
         response.success = true;
+        LOGINFO("response: version=%u, success=%s", response.version, response.success ? "true" : "false");
         return Core::ERROR_NONE;
     }
 
