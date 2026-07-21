@@ -32,7 +32,7 @@ if (USE_THUNDER_R4)
     find_package(${NAMESPACE}COM REQUIRED)
     find_package(${NAMESPACE}WebSocket REQUIRED)
 else()
-    find_package(${NAMESPACE}Protocols REQUIRED)
+    find_package(${NAMESPACE}Protocols QUIET)
 endif()
 
 if (BUILD_TESTS)
