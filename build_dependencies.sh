@@ -39,11 +39,9 @@ git clone --depth 1 --branch  R5.3.0 https://github.com/rdkcentral/ThunderTools.
 
 git clone --depth 1 --branch R5.3.0 https://github.com/rdkcentral/Thunder.git
 
-git clone --depth 1 --branch feature/RDKEMW-21327 https://github.com/rdkcentral/entservices-apis.git
+git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
 
 git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
-
-git clone --depth 1 https://github.com/rdkcentral/meta-rdk-video.git
 
 git clone --depth 1 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
 
@@ -51,13 +49,6 @@ git clone --depth 1 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-test
 # Build Thunder-Tools
 echo "======================================================================================"
 echo "building thunderTools"
-
-cd ThunderTools
-patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0003-Callsign-not-generated-Json-Generator.patch
-patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0004-Add-support-for-project-dir.patch
-patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0005-jsongenerator_fallback_length_validation_fix.patch
-patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0006-Autostart-startmode-deactivated.patch
-cd -
 
 
 cmake -G Ninja -S ThunderTools -B build/ThunderTools \
@@ -92,20 +83,6 @@ echo "==========================================================================
 echo "buliding entservices-apis"
 cd entservices-apis
 rm -rf jsonrpc/DTV.json
-find apis -mindepth 1 -maxdepth 1 \
-    ! -name RemoteControl \
-    ! -name VoiceControl \
-    ! -name DisplayInfo \
-    ! -name Module.cpp \
-    ! -name Module.h \
-    ! -name Ids.h \
-    ! -name Ids_comcast.h \
-    ! -name entservices_errorcodes.h \
-    ! -name common.json \
-    -exec rm -rf {} +
-find apis/DisplayInfo -mindepth 1 -maxdepth 1 \
-    ! -name IConfiguration.h \
-    -exec rm -rf {} +
 cd ..
 
 cmake -G Ninja -S entservices-apis  -B build/entservices-apis \
