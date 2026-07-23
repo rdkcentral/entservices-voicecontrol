@@ -102,19 +102,19 @@ rm -f DisplayInfo/IDisplayInfo.h
 rm -f DisplayInfo/DisplayInfo.json
 
 # Fail fast if required RC/VC interfaces were accidentally pruned.
-if [[ ! -f DisplayInfo/IConfiguration.h ]]; then
+if [ ! -f DisplayInfo/IConfiguration.h ]; then
     echo "ERROR: Missing required interface: entservices-apis/apis/DisplayInfo/IConfiguration.h"
     exit 1
 fi
-if [[ ! -f RemoteControl/IRemoteControl.h ]]; then
+if [ ! -f RemoteControl/IRemoteControl.h ]; then
     echo "ERROR: Missing required interface: entservices-apis/apis/RemoteControl/IRemoteControl.h"
     exit 1
 fi
-if [[ ! -f VoiceControl/IVoiceControl.h ]]; then
+if [ ! -f VoiceControl/IVoiceControl.h ]; then
     echo "ERROR: Missing required interface: entservices-apis/apis/VoiceControl/IVoiceControl.h"
     exit 1
 fi
-cd ..
+cd ../..
 
 cmake -G Ninja -S entservices-apis  -B build/entservices-apis \
     -DEXCEPTIONS_ENABLE=ON \
@@ -124,7 +124,7 @@ cmake -G Ninja -S entservices-apis  -B build/entservices-apis \
 cmake --build build/entservices-apis --target install
 
 # Ensure the include used by plugin code is available post-install.
-if [[ ! -f "$GITHUB_WORKSPACE/install/usr/include/Thunder/interfaces/IConfiguration.h" ]]; then
+if [ ! -f "$GITHUB_WORKSPACE/install/usr/include/Thunder/interfaces/IConfiguration.h" ]; then
     echo "ERROR: Installed header not found: install/usr/include/Thunder/interfaces/IConfiguration.h"
     exit 1
 fi
