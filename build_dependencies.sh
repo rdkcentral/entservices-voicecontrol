@@ -35,9 +35,9 @@ cd ..
 # Clone the required repositories
 
 
-git clone --depth 1 --branch  R4.4.3 https://github.com/rdkcentral/ThunderTools.git
+git clone --depth 1 --branch  R4.4.6 https://github.com/rdkcentral/ThunderTools.git
 
-git clone --depth 1 --branch R4.4.1 https://github.com/rdkcentral/Thunder.git
+git clone --depth 1 --branch R4.4.6 https://github.com/rdkcentral/Thunder.git
 
 git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
 
