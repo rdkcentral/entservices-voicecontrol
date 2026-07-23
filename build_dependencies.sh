@@ -39,7 +39,7 @@ git clone --depth 1 --branch  R5.3.0 https://github.com/rdkcentral/ThunderTools.
 
 git clone --depth 1 --branch R5.3.0 https://github.com/rdkcentral/Thunder.git
 
-git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
+git clone --depth 1 --branch feature/RDKEMW-21327 https://github.com/rdkcentral/entservices-apis.git
 
 git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
@@ -80,9 +80,40 @@ cmake --build build/Thunder --target install
 ############################
 # Build entservices-apis
 echo "======================================================================================"
-echo "buliding entservices-apis"
+echo "building entservices-apis"
 cd entservices-apis
 rm -rf jsonrpc/DTV.json
+
+# Keep only the interface directories needed by RC/VC plugins.
+# DisplayInfo is required because it provides IConfiguration.h used by plugins.
+# This avoids Thunder 5.3 migration failures in unrelated interfaces.
+echo "Pruning unneeded interface directories from entservices-apis..."
+cd apis
+for dir in */; do
+    case "$dir" in
+        RemoteControl/|VoiceControl/|DisplayInfo/) ;;  # keep
+        */) rm -rf "$dir" ;;               # remove
+    esac
+done
+
+# Thunder 5.3 JsonGenerator crashes on DisplayInfo interface generation in this
+# reduced native CI flow. Keep IConfiguration.h only.
+rm -f DisplayInfo/IDisplayInfo.h
+rm -f DisplayInfo/DisplayInfo.json
+
+# Fail fast if required RC/VC interfaces were accidentally pruned.
+if [[ ! -f DisplayInfo/IConfiguration.h ]]; then
+    echo "ERROR: Missing required interface: entservices-apis/apis/DisplayInfo/IConfiguration.h"
+    exit 1
+fi
+if [[ ! -f RemoteControl/IRemoteControl.h ]]; then
+    echo "ERROR: Missing required interface: entservices-apis/apis/RemoteControl/IRemoteControl.h"
+    exit 1
+fi
+if [[ ! -f VoiceControl/IVoiceControl.h ]]; then
+    echo "ERROR: Missing required interface: entservices-apis/apis/VoiceControl/IVoiceControl.h"
+    exit 1
+fi
 cd ..
 
 cmake -G Ninja -S entservices-apis  -B build/entservices-apis \
@@ -91,6 +122,12 @@ cmake -G Ninja -S entservices-apis  -B build/entservices-apis \
     -DCMAKE_MODULE_PATH="$GITHUB_WORKSPACE/install/tools/cmake" \
 
 cmake --build build/entservices-apis --target install
+
+# Ensure the include used by plugin code is available post-install.
+if [[ ! -f "$GITHUB_WORKSPACE/install/usr/include/Thunder/interfaces/IConfiguration.h" ]]; then
+    echo "ERROR: Installed header not found: install/usr/include/Thunder/interfaces/IConfiguration.h"
+    exit 1
+fi
 
 ############################
 # generating external headers

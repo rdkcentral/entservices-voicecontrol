@@ -49,6 +49,11 @@ set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # Thunder 5.3 generated JSON enum conversion handlers rely on namespace aliases.
+        # GCC/Clang reject this without permissive mode.
+        target_compile_options(${MODULE_NAME} PRIVATE -fpermissive)
+endif()
 target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
@@ -62,6 +67,9 @@ set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${PLUGIN_IMPLEMENTATION} PRIVATE -fpermissive)
+endif()
 
 target_compile_definitions(${PLUGIN_IMPLEMENTATION} PRIVATE CTRLM_FOUND)
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CTRLM_INCLUDE_DIRS})
