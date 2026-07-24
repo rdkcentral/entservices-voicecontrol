@@ -51,7 +51,7 @@ namespace Plugin {
         Core::hresult SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result) override;
-        Core::hresult GetVoiceSessionTypes(Exchange::GetVoiceSessionTypesResult& result) override;
+        Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
         Core::hresult VoiceSessionRequest(const string& payload, string& result) override;
         Core::hresult VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionAudioStreamStart(const string& sessionId, Exchange::VoiceControlSuccessResult& result) override;
