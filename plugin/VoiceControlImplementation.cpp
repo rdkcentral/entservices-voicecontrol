@@ -589,7 +589,7 @@ namespace Plugin {
             response.ff.status.clear();
             response.mic.status.clear();
             response.micTap.status.clear();
-            response.capabilities = "[]";
+            response.capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(std::list<string>{});
             response.success = false;
             return Core::ERROR_NONE;
         }
@@ -618,12 +618,14 @@ namespace Plugin {
         populateDeviceStatus("mic_tap", response.micTap);
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
+        std::list<string> capList;
         if (result.HasLabel("capabilities")) {
             auto capabilityArray = result["capabilities"].Array();
-            capabilityArray.ToString(response.capabilities);
-        } else {
-            response.capabilities = "[]";
+            for (uint16_t i = 0; i < capabilityArray.Length(); i++) {
+                capList.push_back(capabilityArray[i].String());
+            }
         }
+        response.capabilities = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(capList);
 
         return Core::ERROR_NONE;
     }
@@ -746,26 +748,27 @@ namespace Plugin {
         return hr;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
+    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(Exchange::GetVoiceSessionTypesResult& result)
     {
         LOGINFO("params={}");
-        JsonObject result;
-        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", result);
+        JsonObject iarmResult;
+        Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            success = false;
+            result.success = false;
+            result.types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(std::list<string>{});
             return Core::ERROR_NONE;
         }
 
-        success = result.HasLabel("success") ? result["success"].Boolean() : false;
+        result.success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
 
         std::list<string> typeList;
-        if (result.HasLabel("types")) {
-            auto arr = result["types"].Array();
+        if (iarmResult.HasLabel("types")) {
+            auto arr = iarmResult["types"].Array();
             for (uint16_t i = 0; i < arr.Length(); i++) {
                 typeList.push_back(arr[i].String());
             }
         }
-        types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
+        result.types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
 
         return Core::ERROR_NONE;
     }
