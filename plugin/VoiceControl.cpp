@@ -20,7 +20,7 @@
 #include "VoiceControl.h"
 #include "PluginVersion.h"
 
-namespace Thunder {
+namespace WPEFramework {
 
     namespace {
         static Plugin::Metadata<Plugin::VoiceControl> metadata(
@@ -256,5 +256,5 @@ namespace Plugin {
     }
 
 } // namespace Plugin
-} // namespace Thunder
+} // namespace WPEFramework
 

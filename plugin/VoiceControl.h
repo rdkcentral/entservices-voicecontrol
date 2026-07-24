@@ -25,7 +25,7 @@
 #include <interfaces/json/JVoiceControl.h>
 #include <interfaces/IConfiguration.h>
 
-namespace Thunder {
+namespace WPEFramework {
 namespace Plugin {
 
     class VoiceControl : public PluginHost::IPlugin, public PluginHost::JSONRPC {
@@ -172,4 +172,4 @@ namespace Plugin {
     };
 
 } // namespace Plugin
-} // namespace Thunder
+} // namespace WPEFramework
