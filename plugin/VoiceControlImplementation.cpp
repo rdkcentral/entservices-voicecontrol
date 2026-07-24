@@ -588,7 +588,7 @@ namespace Plugin {
             response.ptt.status.clear();
             response.ff.status.clear();
             response.mic.status.clear();
-            response.micTap = {};
+            response.micTap.Clear();
             response.capabilities = "[]";
             response.success = false;
             return Core::ERROR_NONE;
