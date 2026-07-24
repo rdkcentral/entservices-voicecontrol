@@ -28,7 +28,7 @@
 #include "ctrlm_ipc.h"
 #include "ctrlm_ipc_voice.h"
 
-namespace WPEFramework {
+namespace Thunder {
 namespace Plugin {
 
     class VoiceControlImplementation : public Exchange::IVoiceControl, public Exchange::IConfiguration {
@@ -49,8 +49,8 @@ namespace Plugin {
         Core::hresult GetVoiceStatus(Exchange::VoiceStatusResponse& response) override;
         Core::hresult ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
-        Core::hresult SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result) override;
-        Core::hresult VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result) override;
+        Core::hresult SendVoiceMessage(const string& msgType, const Core::OptionalType<string>& trx, const Core::OptionalType<uint64_t>& created, const Core::OptionalType<string>& msgPayload, Exchange::VoiceControlSuccessResult& result) override;
+        Core::hresult VoiceSessionByText(const string& transcription, const Core::OptionalType<Exchange::DeviceType>& type, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
         Core::hresult VoiceSessionRequest(const string& payload, string& result) override;
         Core::hresult VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result) override;
@@ -93,4 +93,4 @@ namespace Plugin {
     };
 
 } // namespace Plugin
-} // namespace WPEFramework
+} // namespace Thunder

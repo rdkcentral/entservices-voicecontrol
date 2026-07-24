@@ -25,7 +25,7 @@
 #include <interfaces/json/JVoiceControl.h>
 #include <interfaces/IConfiguration.h>
 
-namespace WPEFramework {
+namespace Thunder {
 namespace Plugin {
 
     class VoiceControl : public PluginHost::IPlugin, public PluginHost::JSONRPC {
@@ -108,16 +108,16 @@ namespace Plugin {
                 LOGINFO("Notify onStreamEnd remoteId=%u sessionId=%s reason=%u", remoteId, sessionId.c_str(), static_cast<unsigned>(reason));
                 Exchange::JVoiceControl::Event::OnStreamEnd(_parent, remoteId, sessionId, reason);
             }
-            void OnSessionEnd(const uint32_t remoteId, const string& sessionId, const Exchange::SessionResult result, const Exchange::ServerStats& serverStats, const string& success, const string& error, const string& abort, const string& shortUtterance, const string& stbStats) override {
+            void OnSessionEnd(const uint32_t remoteId, const string& sessionId, const Exchange::SessionResult result, const Exchange::ServerStats& serverStats, const Core::OptionalType<string>& success, const Core::OptionalType<string>& error, const Core::OptionalType<string>& abort, const Core::OptionalType<string>& shortUtterance, const Core::OptionalType<string>& stbStats) override {
                 LOGINFO("Notify onSessionEnd remoteId=%u sessionId=%s result=%u success=%s error=%s abort=%s shortUtterance=%s stbStats=%s",
                     remoteId,
                     sessionId.c_str(),
                     static_cast<unsigned>(result),
-                    success.c_str(),
-                    error.c_str(),
-                    abort.c_str(),
-                    shortUtterance.c_str(),
-                    stbStats.c_str());
+                    success.IsSet() ? success.Value().c_str() : "",
+                    error.IsSet() ? error.Value().c_str() : "",
+                    abort.IsSet() ? abort.Value().c_str() : "",
+                    shortUtterance.IsSet() ? shortUtterance.Value().c_str() : "",
+                    stbStats.IsSet() ? stbStats.Value().c_str() : "");
                 // Build params directly so optional opaque fields are only included when non-empty
                 JsonData::VoiceControl::OnSessionEndParamsData params;
                 params.RemoteId = remoteId;
@@ -128,24 +128,24 @@ namespace Plugin {
                 if (result != Exchange::SessionResult::ABORT) {
                     params.ServerStats = serverStats;
                 }
-                if (!success.empty()) {
-                    params.Success = success;
+                if (success.IsSet() && !success.Value().empty()) {
+                    params.Success = success.Value();
                     params.Success.SetQuoted(false);
                 }
-                if (!error.empty()) {
-                    params.Error = error;
+                if (error.IsSet() && !error.Value().empty()) {
+                    params.Error = error.Value();
                     params.Error.SetQuoted(false);
                 }
-                if (!abort.empty()) {
-                    params.Abort = abort;
+                if (abort.IsSet() && !abort.Value().empty()) {
+                    params.Abort = abort.Value();
                     params.Abort.SetQuoted(false);
                 }
-                if (!shortUtterance.empty()) {
-                    params.ShortUtterance = shortUtterance;
+                if (shortUtterance.IsSet() && !shortUtterance.Value().empty()) {
+                    params.ShortUtterance = shortUtterance.Value();
                     params.ShortUtterance.SetQuoted(false);
                 }
-                if (!stbStats.empty()) {
-                    params.StbStats = stbStats;
+                if (stbStats.IsSet() && !stbStats.Value().empty()) {
+                    params.StbStats = stbStats.Value();
                     params.StbStats.SetQuoted(false);
                 }
                 Exchange::JVoiceControl::Event::OnSessionEnd(_parent, params);
@@ -172,4 +172,4 @@ namespace Plugin {
     };
 
 } // namespace Plugin
-} // namespace WPEFramework
+} // namespace Thunder

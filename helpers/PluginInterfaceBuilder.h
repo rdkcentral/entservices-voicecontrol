@@ -24,7 +24,7 @@
 
 #include "UtilsLogging.h"
 
-namespace WPEFramework {
+namespace Thunder {
 namespace PluginHost {
     class IShell;
 }

@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <list>
 
-namespace WPEFramework {
+namespace Thunder {
 namespace Plugin {
 
     namespace {
@@ -588,7 +588,7 @@ namespace Plugin {
             response.ptt.status.clear();
             response.ff.status.clear();
             response.mic.status.clear();
-            response.micTap.status.clear();
+            response.micTap = {};
             response.capabilities = "[]";
             response.success = false;
             return Core::ERROR_NONE;
@@ -615,7 +615,11 @@ namespace Plugin {
         populateDeviceStatus("ptt", response.ptt);
         populateDeviceStatus("ff", response.ff);
         populateDeviceStatus("mic", response.mic);
-        populateDeviceStatus("mic_tap", response.micTap);
+        if (result.HasLabel("mic_tap")) {
+            Exchange::DeviceStatus micTapStatus;
+            populateDeviceStatus("mic_tap", micTapStatus);
+            response.micTap = micTapStatus;
+        }
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
         if (result.HasLabel("capabilities")) {
@@ -661,31 +665,31 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const Core::OptionalType<string>& trx, const Core::OptionalType<uint64_t>& created, const Core::OptionalType<string>& msgPayload, Exchange::VoiceControlSuccessResult& result)
     {
         LOGINFO("params: msgType=%s, trx=%s, created=%llu, msgPayload=%s",
                 msgType.c_str(),
-                trx.empty() ? "<not set>" : trx.c_str(),
-                (unsigned long long)created,
-                msgPayload.empty() ? "<not set>" : (_maskPii ? "<***>" : msgPayload.c_str()));
+                !trx.IsSet() ? "<not set>" : trx.Value().c_str(),
+                created.IsSet() ? (unsigned long long)created.Value() : 0ULL,
+                !msgPayload.IsSet() ? "<not set>" : (_maskPii ? "<***>" : msgPayload.Value().c_str()));
         JsonObject params;
         params["msgType"] = msgType;
-        if (!trx.empty()) {
-            params["trx"] = trx;
+        if (trx.IsSet() && !trx.Value().empty()) {
+            params["trx"] = trx.Value();
         }
-        if (created != 0) {
+        if (created.IsSet() && created.Value() != 0) {
             // Core::JSON::Variant has no uint64_t overload; an uncast uint64_t would
             // be implicitly converted to double and serialized as scientific notation
             // (e.g. 1.77757e+12). int64_t has a direct overload and serializes as an
             // exact integer, which is what the voice server expects.
-            params["created"] = static_cast<int64_t>(created);
+            params["created"] = static_cast<int64_t>(created.Value());
         }
-        if (!msgPayload.empty()) {
+        if (msgPayload.IsSet() && !msgPayload.Value().empty()) {
             JsonValue payload;
-            if (tryParseJsonValue(msgPayload, payload) == true) {
+            if (tryParseJsonValue(msgPayload.Value(), payload) == true) {
                 params["msgPayload"] = std::move(payload);
             } else {
-                params["msgPayload"] = msgPayload;
+                params["msgPayload"] = msgPayload.Value();
             }
         }
 
@@ -703,15 +707,15 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Core::OptionalType<Exchange::DeviceType>& type, Exchange::VoiceControlSuccessResult& result)
     {
         LOGINFO("params: transcription=%s, type=%s",
                 _maskPii ? "<***>" : transcription.c_str(),
-                deviceTypeToString(type));
+                type.IsSet() ? deviceTypeToString(type.Value()) : "<not set>");
         // Translate the deprecated API to voiceSessionRequest
         const char* translatedType;
 
-        switch (type) {
+        switch (type.IsSet() ? type.Value() : Exchange::DeviceType::PTT) {
             case Exchange::DeviceType::PTT:
                 translatedType = "ptt_transcription";
                 break;
@@ -833,4 +837,4 @@ namespace Plugin {
     }
 
 } // namespace Plugin
-} // namespace WPEFramework
+} // namespace Thunder
