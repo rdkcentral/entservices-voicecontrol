@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Module.h"
+#include "UtilsLogging.h"
 #include <interfaces/IVoiceControl.h>
 #include <interfaces/json/JVoiceControl.h>
 #include <interfaces/IConfiguration.h>
@@ -80,21 +81,43 @@ namespace Plugin {
             ~Notification() override = default;
 
             void OnSessionBegin(const uint32_t remoteId, const string& sessionId, const Exchange::DeviceType deviceType, const bool keywordVerification) override {
+                LOGINFO("Notify onSessionBegin remoteId=%u sessionId=%s deviceType=%u keywordVerification=%u",
+                    remoteId,
+                    sessionId.c_str(),
+                    static_cast<unsigned>(deviceType),
+                    keywordVerification ? 1u : 0u);
                 Exchange::JVoiceControl::Event::OnSessionBegin(_parent, remoteId, sessionId, deviceType, keywordVerification);
             }
             void OnStreamBegin(const uint32_t remoteId, const string& sessionId) override {
+                LOGINFO("Notify onStreamBegin remoteId=%u sessionId=%s", remoteId, sessionId.c_str());
                 Exchange::JVoiceControl::Event::OnStreamBegin(_parent, remoteId, sessionId);
             }
             void OnKeywordVerification(const uint32_t remoteId, const string& sessionId, const bool verified) override {
+                LOGINFO("Notify onKeywordVerification remoteId=%u sessionId=%s verified=%u", remoteId, sessionId.c_str(), verified ? 1u : 0u);
                 Exchange::JVoiceControl::Event::OnKeywordVerification(_parent, remoteId, sessionId, verified);
             }
             void OnServerMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload) override {
+                LOGINFO("Notify onServerMessage msgType=%s trx=%s created=%llu msgPayload=%s",
+                    msgType.c_str(),
+                    trx.c_str(),
+                    static_cast<unsigned long long>(created),
+                    msgPayload.c_str());
                 Exchange::JVoiceControl::Event::OnServerMessage(_parent, msgType, trx, created, msgPayload);
             }
             void OnStreamEnd(const uint32_t remoteId, const string& sessionId, const uint8_t reason) override {
+                LOGINFO("Notify onStreamEnd remoteId=%u sessionId=%s reason=%u", remoteId, sessionId.c_str(), static_cast<unsigned>(reason));
                 Exchange::JVoiceControl::Event::OnStreamEnd(_parent, remoteId, sessionId, reason);
             }
             void OnSessionEnd(const uint32_t remoteId, const string& sessionId, const Exchange::SessionResult result, const Exchange::ServerStats& serverStats, const string& success, const string& error, const string& abort, const string& shortUtterance, const string& stbStats) override {
+                LOGINFO("Notify onSessionEnd remoteId=%u sessionId=%s result=%u success=%s error=%s abort=%s shortUtterance=%s stbStats=%s",
+                    remoteId,
+                    sessionId.c_str(),
+                    static_cast<unsigned>(result),
+                    success.c_str(),
+                    error.c_str(),
+                    abort.c_str(),
+                    shortUtterance.c_str(),
+                    stbStats.c_str());
                 // Build params directly so optional opaque fields are only included when non-empty
                 JsonData::VoiceControl::OnSessionEndParamsData params;
                 params.RemoteId = remoteId;
