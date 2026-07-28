@@ -37,6 +37,22 @@ cd ..
 
 git clone --depth 1 --branch  R5.3.0 https://github.com/rdkcentral/ThunderTools.git
 
+# Pull the same ThunderTools patches the real production recipe uses
+# (meta-rdk-video/recipes-thunder/thunder/wpeframework-tools_5.3.bb) so this native
+# build's code generation matches the officially-validated tooling instead of relying
+# on ad-hoc workarounds. Cloned fresh each run since this is CI-only; no need to vendor
+# copies that could drift from the source of truth.
+#   0002 - rewrites WPEFramework -> Thunder in interface headers before generation, so
+#          JsonGenerator/ProxyStubGenerator find our still-WPEFramework-namespaced
+#          interfaces (its default search is ::Thunder::Exchange only).
+#   0005 - fixes a JsonGenerator crash (rpc_emitter.py) on params with @length but no
+#          @maxlength, which is what was crashing generation on DisplayInfo/IDisplayInfo.h.
+git clone --depth 1 --branch develop https://github.com/rdkcentral/meta-rdk-video.git
+cd ThunderTools
+patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0002-Change-namespace-Proxystub-Json-Generator.patch
+patch -p1 < $GITHUB_WORKSPACE/meta-rdk-video/recipes-thunder/thunder/wpeframework-tools/0005-jsongenerator_fallback_length_validation_fix.patch
+cd -
+
 git clone --depth 1 --branch R5.3.0 https://github.com/rdkcentral/Thunder.git
 
 git clone --depth 1 --branch feature/RDKEMW-21327 https://github.com/rdkcentral/entservices-apis.git
@@ -95,11 +111,6 @@ for dir in */; do
         */) rm -rf "$dir" ;;               # remove
     esac
 done
-
-# Thunder 5.3 JsonGenerator crashes on DisplayInfo interface generation in this
-# reduced native CI flow. Keep IConfiguration.h only.
-rm -f DisplayInfo/IDisplayInfo.h
-rm -f DisplayInfo/DisplayInfo.json
 
 # Fail fast if required RC/VC interfaces were accidentally pruned.
 if [ ! -f DisplayInfo/IConfiguration.h ]; then
