@@ -435,10 +435,6 @@ namespace Plugin {
         const string trx = params.HasLabel("trx") ? params["trx"].String() : "";
         const uint64_t created = params.HasLabel("created") ? static_cast<uint64_t>(params["created"].Number()) : 0;
         string msgPayload = params.HasLabel("msgPayload") ? jsonValueToString(params["msgPayload"]) : "";
-        if (_maskPii) {
-            // Redact payload when PII masking is enabled to avoid exposing sensitive data to observers.
-            msgPayload.clear();
-        }
 
         // @restrict:256K on OnServerMessage.msgPayload — log and clamp before dispatch
         checkRestrictLimit(msgPayload, 256 * 1024, "OnServerMessage.msgPayload");
@@ -489,8 +485,7 @@ namespace Plugin {
         if (params.HasLabel("serverStats")) {
             JsonObject statsObj = params["serverStats"].Object();
             serverStats.dnsTime = statsObj.HasLabel("dnsTime") ? statsObj["dnsTime"].Double() : 0.0;
-            // When PII masking is enabled, avoid propagating server IP to observers.
-            serverStats.serverIp = (!_maskPii && statsObj.HasLabel("serverIp")) ? statsObj["serverIp"].String() : "";
+            serverStats.serverIp = statsObj.HasLabel("serverIp") ? statsObj["serverIp"].String() : "";
             serverStats.connectTime = statsObj.HasLabel("connectTime") ? statsObj["connectTime"].Double() : 0.0;
         }
 
