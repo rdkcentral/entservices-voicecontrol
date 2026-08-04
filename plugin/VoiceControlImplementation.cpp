@@ -633,6 +633,8 @@ namespace Plugin {
             Exchange::DeviceStatus micTapStatus;
             populateDeviceStatus("mic_tap", micTapStatus);
             response.micTap = micTapStatus;
+        } else {
+            response.micTap.Clear();
         }
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
