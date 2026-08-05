@@ -188,13 +188,12 @@ namespace Plugin {
         PluginHost::IShell* shell = nullptr;
         uint32_t connectionId = 0;
 
-        _adminLock.Lock();
         if (_service != service)
         {
             LOGWARN("VoiceControl::Deinitialize called with no matching active service (service=%p, _service=%p); skipping teardown.", service, _service);
-            _adminLock.Unlock();
             return;
         }
+        _adminLock.Lock();
         _isShuttingDown = true;
         implementation = _implementation;
         configure = _configure;
