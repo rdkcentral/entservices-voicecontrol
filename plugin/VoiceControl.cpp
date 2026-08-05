@@ -189,7 +189,16 @@ namespace Plugin {
         uint32_t connectionId = 0;
 
         _adminLock.Lock();
-        ASSERT(_service == service);
+        if (_service != service)
+        {
+            // Initialize() never completed successfully (or Deinitialize() was
+            // already run for this instance), so there is nothing to tear down.
+            // ASSERT alone is not enough here: it compiles out in release builds,
+            // and this can legitimately happen after a partial/failed Initialize().
+            LOGWARN("VoiceControl::Deinitialize called with no matching active service (service=%p, _service=%p); skipping teardown.", service, _service);
+            _adminLock.Unlock();
+            return;
+        }
         _isShuttingDown = true;
         implementation = _implementation;
         configure = _configure;
