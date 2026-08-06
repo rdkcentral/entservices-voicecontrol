@@ -2,6 +2,8 @@
 set -x
 set -e
 ##############################
+THUNDER_TOOLS_COMMIT_SHA="d5dd83c7c19c49c7f25c558c126500bd2d64f7a4"
+THUNDER_COMMIT_SHA="2c0fcc5529e7da734be558ca6efa05d934dcce31"
 GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 cd ${GITHUB_WORKSPACE}
@@ -35,9 +37,15 @@ cd ..
 # Clone the required repositories
 
 
-git clone --depth 1 --branch  R4.4.6 https://github.com/rdkcentral/ThunderTools.git
+git clone -b R4_4-RDK https://github.com/rdkcentral/ThunderTools.git
+cd ThunderTools
+git checkout $THUNDER_TOOLS_COMMIT_SHA
+cd ..
 
-git clone --depth 1 --branch R4.4.6 https://github.com/rdkcentral/Thunder.git
+git clone -b R4_4-RDK https://github.com/rdkcentral/Thunder.git
+cd Thunder
+git checkout $THUNDER_COMMIT_SHA
+cd ..
 
 git clone --depth 1 --branch 4.0.8 https://github.com/rdkcentral/entservices-apis.git
 
@@ -50,7 +58,6 @@ git clone --depth 1 --branch feature/RDKEMW-22169 https://$GITHUB_TOKEN@github.c
 echo "======================================================================================"
 echo "building thunderTools"
 cd ThunderTools
-patch -p1 < $GITHUB_WORKSPACE/entservices-testframework/patches/00010-R4.4.6-Add-support-for-project-dir.patch
 cd -
 
 
@@ -69,8 +76,6 @@ echo "==========================================================================
 echo "building thunder"
 
 cd Thunder
-patch -p1 < $GITHUB_WORKSPACE/entservices-testframework/patches/error_code_R4_4_6.patch
-patch -p1 < $GITHUB_WORKSPACE/entservices-testframework/patches/1004-R4.4.6-Add-support-for-project-dir.patch
 cd -
 
 cmake -G Ninja -S Thunder -B build/Thunder \
