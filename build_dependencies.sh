@@ -37,21 +37,21 @@ cd ..
 # Clone the required repositories
 
 
-git clone -b R4_4-RDK https://github.com/rdkcentral/ThunderTools.git
+git clone --depth 1 --branch  R4_4-RDK https://github.com/rdkcentral/ThunderTools.git
 cd ThunderTools
 git checkout $THUNDER_TOOLS_COMMIT_SHA
 cd ..
 
-git clone -b R4_4-RDK https://github.com/rdkcentral/Thunder.git
+git clone --depth 1 --branch R4_4-RDK https://github.com/rdkcentral/Thunder.git
 cd Thunder
 git checkout $THUNDER_COMMIT_SHA
 cd ..
 
-git clone --depth 1 --branch 4.0.8 https://github.com/rdkcentral/entservices-apis.git
+git clone --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
 
 git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
-git clone --depth 1 --branch develop https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
+git clone --depth 1 --branch 2.0.0 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
 
 ############################
 # Build Thunder-Tools
