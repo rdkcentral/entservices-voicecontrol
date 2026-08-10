@@ -603,7 +603,7 @@ namespace Plugin {
             response.ff.status.clear();
             response.mic.status.clear();
             response.micTap.Clear();
-            response.capabilities = "[]";
+            response.capabilities.clear();
             response.success = false;
             return Core::ERROR_NONE;
         }
@@ -638,11 +638,16 @@ namespace Plugin {
         }
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
+        response.capabilities.clear();
         if (result.HasLabel("capabilities")) {
-            auto capabilityArray = result["capabilities"].Array();
-            capabilityArray.ToString(response.capabilities);
-        } else {
-            response.capabilities = "[]";
+            auto elements = result["capabilities"].Array().Elements();
+            while (elements.Next()) {
+                response.capabilities.push_back(elements.Current().String());
+            }
+            if (response.capabilities.size() > 32) {
+                LOGERR("COM-RPC field 'VoiceStatusResponse.capabilities' exceeds @restrict limit: %zu > 32 elements — truncating", response.capabilities.size());
+                response.capabilities.resize(32);
+            }
         }
 
         return Core::ERROR_NONE;
