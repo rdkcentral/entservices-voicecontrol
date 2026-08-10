@@ -650,6 +650,13 @@ namespace Plugin {
             }
         }
 
+        LOGINFO("COMRPC-DIAG-A GetVoiceStatus pre-return: success=%d maskPii=%d urlPtt='%s' "
+                "ptt.status='%s' ff.status='%s' mic.status='%s' capabilities.size=%zu capabilities[0]='%s'",
+                response.success, response.maskPii, response.urlPtt.c_str(),
+                response.ptt.status.c_str(), response.ff.status.c_str(), response.mic.status.c_str(),
+                response.capabilities.size(),
+                response.capabilities.empty() ? "" : response.capabilities[0].c_str());
+
         return Core::ERROR_NONE;
     }
 
