@@ -649,7 +649,12 @@ namespace Plugin {
         response.capabilities.clear();
         if (result.HasLabel("capabilities")) {
             LOGINFO("COMRPC-CKPT-CAP0 GetVoiceStatus: capabilities label present, entering loop");
-            auto elements = result["capabilities"].Array().Elements();
+            // NOTE: Array() returns a temporary ArrayType<Variant> by value. Bind it to a
+            // named variable before calling Elements() — otherwise the returned iterator
+            // holds a dangling pointer into the temporary's internal list once this
+            // statement ends, and Next() past the first element is undefined behavior.
+            JsonArray array = result["capabilities"].Array();
+            auto elements = array.Elements();
             size_t idx = 0;
             while (elements.Next()) {
                 string cap = elements.Current().String();
