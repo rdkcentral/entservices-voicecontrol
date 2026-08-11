@@ -608,8 +608,6 @@ namespace Plugin {
             return Core::ERROR_NONE;
         }
 
-        LOGINFO("COMRPC-CKPT0 GetVoiceStatus: IARM call returned success, entering parse");
-
         response.maskPii = result.HasLabel("maskPii") ? result["maskPii"].Boolean() : _maskPii.load();
         _maskPii = response.maskPii;
 
@@ -618,9 +616,6 @@ namespace Plugin {
         response.urlMicTap = result.HasLabel("urlMicTap") ? result["urlMicTap"].String() : "";
         response.prv = result.HasLabel("prv") ? result["prv"].Boolean() : false;
         response.wwFeedback = result.HasLabel("wwFeedback") ? result["wwFeedback"].Boolean() : false;
-
-        LOGINFO("COMRPC-CKPT1 GetVoiceStatus: scalars set (maskPii=%d urlPtt='%s' prv=%d wwFeedback=%d), about to populate device statuses",
-                response.maskPii, response.urlPtt.c_str(), response.prv, response.wwFeedback);
 
         const auto populateDeviceStatus = [&result](const char label[], Exchange::DeviceStatus& deviceStatus) {
             deviceStatus.status.clear();
@@ -643,41 +638,22 @@ namespace Plugin {
         }
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
-        LOGINFO("COMRPC-CKPT2 GetVoiceStatus: device statuses populated (ptt='%s' ff='%s' mic='%s' success=%d), about to parse capabilities",
-                response.ptt.status.c_str(), response.ff.status.c_str(), response.mic.status.c_str(), response.success);
-
         response.capabilities.clear();
         if (result.HasLabel("capabilities")) {
-            LOGINFO("COMRPC-CKPT-CAP0 GetVoiceStatus: capabilities label present, entering loop");
             // NOTE: Array() returns a temporary ArrayType<Variant> by value. Bind it to a
             // named variable before calling Elements() — otherwise the returned iterator
             // holds a dangling pointer into the temporary's internal list once this
             // statement ends, and Next() past the first element is undefined behavior.
             JsonArray array = result["capabilities"].Array();
             auto elements = array.Elements();
-            size_t idx = 0;
             while (elements.Next()) {
-                string cap = elements.Current().String();
-                LOGINFO("COMRPC-CKPT-CAP1 GetVoiceStatus: capabilities[%zu]='%s' before push_back", idx, cap.c_str());
-                response.capabilities.push_back(cap);
-                LOGINFO("COMRPC-CKPT-CAP2 GetVoiceStatus: capabilities[%zu] pushed, size=%zu", idx, response.capabilities.size());
-                idx++;
+                response.capabilities.push_back(elements.Current().String());
             }
-            LOGINFO("COMRPC-CKPT-CAP3 GetVoiceStatus: capabilities loop done, size=%zu", response.capabilities.size());
             if (response.capabilities.size() > 32) {
                 LOGERR("COM-RPC field 'VoiceStatusResponse.capabilities' exceeds @restrict limit: %zu > 32 elements — truncating", response.capabilities.size());
                 response.capabilities.resize(32);
             }
-        } else {
-            LOGINFO("COMRPC-CKPT-CAP0 GetVoiceStatus: capabilities label NOT present in IARM response");
         }
-
-        LOGINFO("COMRPC-DIAG-A GetVoiceStatus pre-return: success=%d maskPii=%d urlPtt='%s' "
-                "ptt.status='%s' ff.status='%s' mic.status='%s' capabilities.size=%zu capabilities[0]='%s'",
-                response.success, response.maskPii, response.urlPtt.c_str(),
-                response.ptt.status.c_str(), response.ff.status.c_str(), response.mic.status.c_str(),
-                response.capabilities.size(),
-                response.capabilities.empty() ? "" : response.capabilities[0].c_str());
 
         return Core::ERROR_NONE;
     }
