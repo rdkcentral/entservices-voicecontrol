@@ -35,19 +35,19 @@ cd ..
 # Clone the required repositories
 
 
-git clone --branch R4_4-RDK https://github.com/rdkcentral/ThunderTools.git
+git clone --single-branch --branch R4_4-RDK https://github.com/rdkcentral/ThunderTools.git
 cd ThunderTools
 git checkout d5dd83c7c19c49c7f25c558c126500bd2d64f7a4
 cd ..
 
-git clone --branch R4_4-RDK https://github.com/rdkcentral/Thunder.git
+git clone --single-branch --branch R4_4-RDK https://github.com/rdkcentral/Thunder.git
 cd Thunder
 git checkout 2c0fcc5529e7da734be558ca6efa05d934dcce31
 cd ..
 
-git clone --depth 1 --branch feature/RDKEMW-22650 https://github.com/rdkcentral/entservices-apis.git
+git clone --single-branch --depth 1 --branch feature/RDKEMW-22650 https://github.com/rdkcentral/entservices-apis.git
 
-git clone --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
+git clone --single-branch --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
 git clone --depth 1 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
 
@@ -186,7 +186,7 @@ if $BUILD_TESTS; then
 
     ############################
     # Build google test
-    git clone --depth 1 --branch v1.15.0 https://github.com/google/googletest.git
+    git clone --single-branch --depth 1 --branch v1.15.0 https://github.com/google/googletest.git
 
     cmake -G Ninja -S "googletest" -B build/googletest \
           -DCMAKE_INSTALL_PREFIX="install/usr" \
