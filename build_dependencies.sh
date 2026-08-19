@@ -2,6 +2,8 @@
 set -x
 set -e
 ##############################
+THUNDER_TOOLS_COMMIT_SHA="d5dd83c7c19c49c7f25c558c126500bd2d64f7a4"
+THUNDER_COMMIT_SHA="2c0fcc5529e7da734be558ca6efa05d934dcce31"
 GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 cd ${GITHUB_WORKSPACE}
@@ -49,7 +51,7 @@ git clone --single-branch --depth 1 --branch feature/RDKEMW-22650 https://github
 
 git clone --single-branch --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
-git clone --depth 1 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
+git clone --depth 1 --branch 2.0.0 https://$GITHUB_TOKEN@github.com/rdkcentral/entservices-testframework.git
 
 ############################
 # Build Thunder-Tools
