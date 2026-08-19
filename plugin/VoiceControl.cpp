@@ -94,6 +94,70 @@ namespace Plugin {
                     _adminLock.Unlock();
 
                     Exchange::JVoiceControl::Register(*this, implementation);
+
+                    // DIAGNOSTIC (diag/setVoiceInit-raw-json branch only): capture the raw
+                    // setVoiceInit JSON-RPC request. The generated deserializer treats an
+                    // omitted roles/capabilities/vrexFields array the same as an explicitly
+                    // empty one (it's missing the IsSet() guard that scalar OptionalType
+                    // params have), so this override re-parses the raw JSON to tell the two
+                    // cases apart, logs it, and still forwards to the real implementation.
+                    Register(_T("setVoiceInit"), [implementation](const Core::JSONRPC::Context&, const string&, const string& parameters, string& result) -> uint32_t {
+                        LOGINFO("RAW setVoiceInit parameters=%s", parameters.c_str());
+
+                        JsonData::VoiceControl::SetVoiceInitParamsData params;
+                        params.FromString(parameters);
+
+                        JsonObject rawParams;
+                        rawParams.FromString(parameters);
+
+                        Core::OptionalType<std::vector<string>> roles;
+                        if (rawParams.HasLabel("roles") == true) {
+                            std::vector<string> values;
+                            auto it = params.Roles.Elements();
+                            while (it.Next() == true) { values.push_back(it.Current()); }
+                            roles = std::move(values);
+                        }
+
+                        Core::OptionalType<std::vector<string>> capabilities;
+                        if (rawParams.HasLabel("capabilities") == true) {
+                            std::vector<string> values;
+                            auto it = params.Capabilities.Elements();
+                            while (it.Next() == true) { values.push_back(it.Current()); }
+                            capabilities = std::move(values);
+                        }
+
+                        Core::OptionalType<std::vector<string>> vrexFields;
+                        if (rawParams.HasLabel("vrexFields") == true) {
+                            std::vector<string> values;
+                            auto it = params.VrexFields.Elements();
+                            while (it.Next() == true) { values.push_back(it.Current()); }
+                            vrexFields = std::move(values);
+                        }
+
+                        Core::OptionalType<string> transmissionProtocol{};
+                        if (params.TransmissionProtocol.IsSet() == true) { transmissionProtocol = params.TransmissionProtocol; }
+                        Core::OptionalType<string> downstreamProtocol{};
+                        if (params.DownstreamProtocol.IsSet() == true) { downstreamProtocol = params.DownstreamProtocol; }
+                        Core::OptionalType<string> clientProfile{};
+                        if (params.ClientProfile.IsSet() == true) { clientProfile = params.ClientProfile; }
+                        Core::OptionalType<string> language{};
+                        if (params.Language.IsSet() == true) { language = params.Language; }
+                        Core::OptionalType<Exchange::VoiceInitIdentity> id{};
+                        if (params.Id.IsSet() == true) { id = params.Id; }
+
+                        Exchange::VoiceControlSuccessResult implResult{};
+                        uint32_t errorCode = implementation->SetVoiceInit(roles, transmissionProtocol, downstreamProtocol, capabilities, clientProfile, language, vrexFields, id, implResult);
+
+                        if (errorCode == Core::ERROR_NONE) {
+                            JsonData::VoiceControl::VoiceControlSuccessResultInfo resultInfo;
+                            resultInfo.Set(true);
+                            resultInfo = implResult;
+                            resultInfo.ToString(result);
+                        } else {
+                            result.clear();
+                        }
+                        return errorCode;
+                    });
                 }
             }
         }
