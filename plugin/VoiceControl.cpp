@@ -189,11 +189,22 @@ namespace Plugin {
         uint32_t connectionId = 0;
 
         _adminLock.Lock();
-        ASSERT(_service == service);
+        shell = _service;
+        if (shell == nullptr)
+        {
+            LOGWARN("VoiceControl::Deinitialize called with no active service (service=%p, _service=%p); skipping teardown.",
+                static_cast<const void*>(service), static_cast<const void*>(_service));
+            _adminLock.Unlock();
+            return;
+        }
+        if (shell != service)
+        {
+            LOGWARN("VoiceControl::Deinitialize called with mismatched service (service=%p, _service=%p); proceeding with active service.",
+                static_cast<const void*>(service), static_cast<const void*>(shell));
+        }
         _isShuttingDown = true;
         implementation = _implementation;
         configure = _configure;
-        shell = _service;
         connectionId = _connectionId;
         _implementation = nullptr;
         _configure = nullptr;
@@ -215,7 +226,7 @@ namespace Plugin {
                 configure->Release();
             }
 
-            RPC::IRemoteConnection* connection = service->RemoteConnection(connectionId);
+            RPC::IRemoteConnection* connection = shell->RemoteConnection(connectionId);
             VARIABLE_IS_NOT_USED const uint32_t result = implementation->Release();
             if (result != Core::ERROR_DESTRUCTION_SUCCEEDED)
             {
