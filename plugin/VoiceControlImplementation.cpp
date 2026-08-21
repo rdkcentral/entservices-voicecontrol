@@ -694,14 +694,14 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const Core::OptionalType<std::vector<string>>& roles, const Core::OptionalType<string>& transmissionProtocol, const Core::OptionalType<string>& downstreamProtocol, const Core::OptionalType<std::vector<string>>& capabilities, const Core::OptionalType<string>& clientProfile, const Core::OptionalType<string>& language, const Core::OptionalType<std::vector<string>>& vrexFields, const Core::OptionalType<Exchange::VoiceInitIdentity>& id, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const std::vector<string>& roles, const Core::OptionalType<string>& transmissionProtocol, const Core::OptionalType<string>& downstreamProtocol, const std::vector<string>& capabilities, const Core::OptionalType<string>& clientProfile, const Core::OptionalType<string>& language, const std::vector<string>& vrexFields, const Core::OptionalType<Exchange::VoiceInitIdentity>& id, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;
 
-        const auto addStringArray = [&params](const char* label, const Core::OptionalType<std::vector<string>>& values) {
-            if (values.IsSet()) {
+        const auto addStringArray = [&params](const char* label, const std::vector<string>& values) {
+            if (!values.empty()) {
                 JsonArray array;
-                for (const auto& value : values.Value()) {
+                for (const auto& value : values) {
                     array.Add(Core::JSON::Variant(value));
                 }
                 params[label] = array;
