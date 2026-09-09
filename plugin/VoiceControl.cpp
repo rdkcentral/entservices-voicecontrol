@@ -94,55 +94,6 @@ namespace Plugin {
                     _adminLock.Unlock();
 
                     Exchange::JVoiceControl::Register(*this, implementation);
-
-                    // configureVoice is @json:omit in the interface because it needs
-                    // pass-through semantics: the entire JSON-RPC params object must
-                    // be forwarded as-is to ctrlm. The generated stub would wrap it
-                    // in a "payload" key, breaking backward compatibility.
-                    Register<JsonObject, JsonObject>("configureVoice",
-                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
-                            string payload;
-                            params.ToString(payload);
-                            LOGINFO("configureVoice paramsLen=%zu", payload.size());
-                            Exchange::VoiceControlSuccessResult result{};
-                            Core::hresult hr = _implementation->ConfigureVoice(payload, result);
-                            response["success"] = result.success;
-                            LOGINFO("configureVoice result: hr=%u success=%s", hr, result.success ? "true" : "false");
-                            return hr;
-                        });
-
-                    // setVoiceInit is @json:omit for the same reason: the old plugin
-                    // forwarded the entire init JSON (roles, transmissionProtocol,
-                    // capabilities, clientProfile, vrexFields, id, etc.) unchanged
-                    // to ctrlm. The typed interface would only pass language +
-                    // capabilities, stripping fields vrex requires.
-                    Register<JsonObject, JsonObject>("setVoiceInit",
-                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
-                            string payload;
-                            params.ToString(payload);
-                            LOGINFO("setVoiceInit paramsLen=%zu", payload.size());
-                            Exchange::VoiceControlSuccessResult result{};
-                            Core::hresult hr = _implementation->SetVoiceInit(payload, result);
-                            response["success"] = result.success;
-                            LOGINFO("setVoiceInit result: hr=%u success=%s", hr, result.success ? "true" : "false");
-                            return hr;
-                        });
-
-                    // voiceSessionRequest is @json:omit because the old plugin
-                    // forwarded the full params (audio_file, audio_format, name,
-                    // type, transcription) unchanged and returned the full ctrlm
-                    // result (success + sessionId) unchanged.
-                    Register<JsonObject, JsonObject>("voiceSessionRequest",
-                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
-                            string payload;
-                            params.ToString(payload);
-                            LOGINFO("voiceSessionRequest paramsLen=%zu", payload.size());
-                            string rawResult;
-                            Core::hresult hr = _implementation->VoiceSessionRequest(payload, rawResult);
-                            response.FromString(rawResult);
-                            LOGINFO("voiceSessionRequest result: hr=%u response=%s", hr, rawResult.c_str());
-                            return hr;
-                        });
                 }
             }
         }
@@ -189,7 +140,12 @@ namespace Plugin {
         uint32_t connectionId = 0;
 
         _adminLock.Lock();
-        ASSERT(_service == service);
+        if (_service != service)
+        {
+            LOGWARN("VoiceControl::Deinitialize called with no matching active service (service=%p, _service=%p); skipping teardown.", service, _service);
+            _adminLock.Unlock();
+            return;
+        }
         _isShuttingDown = true;
         implementation = _implementation;
         configure = _configure;
@@ -207,9 +163,6 @@ namespace Plugin {
         {
             implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);
-            Unregister("configureVoice");
-            Unregister("setVoiceInit");
-            Unregister("voiceSessionRequest");
 
             if (configure != nullptr) {
                 configure->Release();

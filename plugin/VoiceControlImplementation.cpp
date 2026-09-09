@@ -64,6 +64,25 @@ namespace Plugin {
             }
         }
 
+        // --- VoiceSessionRequestType: ctrlm expects lowercase/underscore strings, matches the @text values in IVoiceControl.h ---
+        const char* voiceSessionRequestTypeToString(const Exchange::VoiceSessionRequestType type)
+        {
+            switch (type) {
+            case Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION:     return "ptt_transcription";
+            case Exchange::VoiceSessionRequestType::PTT_AUDIO_FILE:        return "ptt_audio_file";
+            case Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION:      return "ff_transcription";
+            case Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION:     return "mic_transcription";
+            case Exchange::VoiceSessionRequestType::MIC_AUDIO_FILE:        return "mic_audio_file";
+            case Exchange::VoiceSessionRequestType::MIC_STREAM_DEFAULT:    return "mic_stream_default";
+            case Exchange::VoiceSessionRequestType::MIC_STREAM_SINGLE:     return "mic_stream_single";
+            case Exchange::VoiceSessionRequestType::MIC_STREAM_MULTI:      return "mic_stream_multi";
+            case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_SINGLE: return "mic_tap_stream_single";
+            case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_MULTI:  return "mic_tap_stream_multi";
+            case Exchange::VoiceSessionRequestType::MIC_FACTORY_TEST:      return "mic_factory_test";
+            default:                                                      return "ptt_transcription";
+            }
+        }
+
         bool tryParseJsonValue(const string& serialized, JsonValue& value)
         {
             if (serialized.empty()) {
@@ -583,8 +602,8 @@ namespace Plugin {
             response.ptt.status.clear();
             response.ff.status.clear();
             response.mic.status.clear();
-            response.micTap.status.clear();
-            response.capabilities = "[]";
+            response.micTap.Clear();
+            response.capabilities.clear();
             response.success = false;
             return Core::ERROR_NONE;
         }
@@ -610,24 +629,59 @@ namespace Plugin {
         populateDeviceStatus("ptt", response.ptt);
         populateDeviceStatus("ff", response.ff);
         populateDeviceStatus("mic", response.mic);
-        populateDeviceStatus("mic_tap", response.micTap);
+        if (result.HasLabel("mic_tap")) {
+            Exchange::DeviceStatus micTapStatus;
+            populateDeviceStatus("mic_tap", micTapStatus);
+            response.micTap = micTapStatus;
+        } else {
+            response.micTap.Clear();
+        }
         response.success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
+        response.capabilities.clear();
         if (result.HasLabel("capabilities")) {
-            auto capabilityArray = result["capabilities"].Array();
-            capabilityArray.ToString(response.capabilities);
-        } else {
-            response.capabilities = "[]";
+            // Array() returns a temporary; must be named or Elements()'s iterator dangles.
+            JsonArray array = result["capabilities"].Array();
+            auto elements = array.Elements();
+            while (elements.Next()) {
+                response.capabilities.push_back(elements.Current().String());
+            }
+            if (response.capabilities.size() > 32) {
+                LOGERR("COM-RPC field 'VoiceStatusResponse.capabilities' exceeds @restrict limit: %zu > 32 elements — truncating", response.capabilities.size());
+                response.capabilities.resize(32);
+            }
         }
 
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::ConfigureVoice(const string& payload, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::ConfigureVoice(const Core::OptionalType<string>& urlAll, const Core::OptionalType<string>& urlPtt, const Core::OptionalType<string>& urlHf, const Core::OptionalType<string>& urlMicTap, const Core::OptionalType<bool>& enable, const Core::OptionalType<bool>& prv, const Core::OptionalType<bool>& wwFeedback, const Core::OptionalType<Exchange::DeviceEnableConfig>& ptt, const Core::OptionalType<Exchange::DeviceEnableConfig>& ff, const Core::OptionalType<Exchange::DeviceEnableConfig>& mic, Exchange::VoiceControlSuccessResult& result)
     {
-        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
-        // Pass the caller's JSON through unchanged — preserves all optional fields exactly as provided.
-        const string& jsonParams = payload.empty() ? string("{}") : payload;
+        JsonObject params;
+        if (urlAll.IsSet())     { params["urlAll"] = urlAll.Value(); }
+        if (urlPtt.IsSet())     { params["urlPtt"] = urlPtt.Value(); }
+        if (urlHf.IsSet())      { params["urlHf"] = urlHf.Value(); }
+        if (urlMicTap.IsSet())  { params["urlMicTap"] = urlMicTap.Value(); }
+        if (enable.IsSet())     { params["enable"] = enable.Value(); }
+        if (prv.IsSet())        { params["prv"] = prv.Value(); }
+        if (wwFeedback.IsSet()) { params["wwFeedback"] = wwFeedback.Value(); }
+
+        const auto addDeviceEnable = [&params](const char* label, const Core::OptionalType<Exchange::DeviceEnableConfig>& device) {
+            if (device.IsSet()) {
+                JsonObject deviceObj;
+                if (device.Value().enable.IsSet()) {
+                    deviceObj["enable"] = device.Value().enable.Value();
+                }
+                params[label] = deviceObj;
+            }
+        };
+        addDeviceEnable("ptt", ptt);
+        addDeviceEnable("ff", ff);
+        addDeviceEnable("mic", mic);
+
+        string jsonParams;
+        params.ToString(jsonParams);
+        LOGINFO("params=%s", jsonParams.c_str());
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, iarmResult);
@@ -640,10 +694,36 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const std::vector<string>& roles, const Core::OptionalType<string>& transmissionProtocol, const Core::OptionalType<string>& downstreamProtocol, const std::vector<string>& capabilities, const Core::OptionalType<string>& clientProfile, const Core::OptionalType<string>& language, const std::vector<string>& vrexFields, const Core::OptionalType<Exchange::VoiceInitIdentity>& id, Exchange::VoiceControlSuccessResult& result)
     {
-        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
-        const string& jsonParams = payload.empty() ? string("{}") : payload;
+        JsonObject params;
+
+        const auto addStringArray = [&params](const char* label, const std::vector<string>& values) {
+            if (!values.empty()) {
+                JsonArray array;
+                for (const auto& value : values) {
+                    array.Add(Core::JSON::Variant(value));
+                }
+                params[label] = array;
+            }
+        };
+        addStringArray("roles", roles);
+        if (transmissionProtocol.IsSet()) { params["transmissionProtocol"] = transmissionProtocol.Value(); }
+        if (downstreamProtocol.IsSet())   { params["downstreamProtocol"] = downstreamProtocol.Value(); }
+        addStringArray("capabilities", capabilities);
+        if (clientProfile.IsSet()) { params["clientProfile"] = clientProfile.Value(); }
+        if (language.IsSet())      { params["language"] = language.Value(); }
+        addStringArray("vrexFields", vrexFields);
+        if (id.IsSet()) {
+            JsonObject idObj;
+            if (id.Value().type.IsSet())    { idObj["type"] = id.Value().type.Value(); }
+            if (id.Value().partner.IsSet()) { idObj["partner"] = id.Value().partner.Value(); }
+            params["id"] = idObj;
+        }
+
+        string jsonParams;
+        params.ToString(jsonParams);
+        LOGINFO("params=%s", jsonParams.c_str());
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, iarmResult);
@@ -656,31 +736,31 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const string& trx, const uint64_t created, const string& msgPayload, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SendVoiceMessage(const string& msgType, const Core::OptionalType<string>& trx, const Core::OptionalType<uint64_t>& created, const Core::OptionalType<string>& msgPayload, Exchange::VoiceControlSuccessResult& result)
     {
         LOGINFO("params: msgType=%s, trx=%s, created=%llu, msgPayload=%s",
                 msgType.c_str(),
-                trx.empty() ? "<not set>" : trx.c_str(),
-                (unsigned long long)created,
-                msgPayload.empty() ? "<not set>" : (_maskPii ? "<***>" : msgPayload.c_str()));
+                !trx.IsSet() ? "<not set>" : trx.Value().c_str(),
+                created.IsSet() ? (unsigned long long)created.Value() : 0ULL,
+                !msgPayload.IsSet() ? "<not set>" : (_maskPii ? "<***>" : msgPayload.Value().c_str()));
         JsonObject params;
         params["msgType"] = msgType;
-        if (!trx.empty()) {
-            params["trx"] = trx;
+        if (trx.IsSet() && !trx.Value().empty()) {
+            params["trx"] = trx.Value();
         }
-        if (created != 0) {
+        if (created.IsSet() && created.Value() != 0) {
             // Core::JSON::Variant has no uint64_t overload; an uncast uint64_t would
             // be implicitly converted to double and serialized as scientific notation
             // (e.g. 1.77757e+12). int64_t has a direct overload and serializes as an
             // exact integer, which is what the voice server expects.
-            params["created"] = static_cast<int64_t>(created);
+            params["created"] = static_cast<int64_t>(created.Value());
         }
-        if (!msgPayload.empty()) {
+        if (msgPayload.IsSet() && !msgPayload.Value().empty()) {
             JsonValue payload;
-            if (tryParseJsonValue(msgPayload, payload) == true) {
+            if (tryParseJsonValue(msgPayload.Value(), payload) == true) {
                 params["msgPayload"] = std::move(payload);
             } else {
-                params["msgPayload"] = msgPayload;
+                params["msgPayload"] = msgPayload.Value();
             }
         }
 
@@ -698,52 +778,44 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Exchange::DeviceType type, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionByText(const string& transcription, const Core::OptionalType<Exchange::DeviceType>& type, Exchange::VoiceControlSuccessResult& result)
     {
         LOGINFO("params: transcription=%s, type=%s",
                 _maskPii ? "<***>" : transcription.c_str(),
-                deviceTypeToString(type));
+                type.IsSet() ? deviceTypeToString(type.Value()) : "<not set>");
         // Translate the deprecated API to voiceSessionRequest
-        const char* translatedType;
-
-        switch (type) {
+        Exchange::VoiceSessionRequestType requestType;
+        switch (type.IsSet() ? type.Value() : Exchange::DeviceType::PTT) {
             case Exchange::DeviceType::PTT:
-                translatedType = "ptt_transcription";
+                requestType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
                 break;
             case Exchange::DeviceType::FF:
-                translatedType = "ff_transcription";
+                requestType = Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION;
                 break;
             case Exchange::DeviceType::MIC:
-                translatedType = "mic_transcription";
+                requestType = Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION;
                 break;
             default:
-                translatedType = "ptt_transcription";
+                requestType = Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION;
                 break;
         }
 
-        JsonObject params;
-        params["type"] = translatedType;
+        Core::OptionalType<string> transcriptionOpt;
         if (!transcription.empty()) {
-            params["transcription"] = transcription;
+            transcriptionOpt = transcription;
         }
-        string payload;
-        params.ToString(payload);
 
-        string rawResult;
-        Core::hresult hr = VoiceSessionRequest(payload, rawResult);
-        if (hr == Core::ERROR_NONE) {
-            JsonObject parsed;
-            parsed.FromString(rawResult);
-            result.success = parsed.HasLabel("success") ? parsed["success"].Boolean() : false;
-        } else {
-            result.success = false;
-        }
+        bool success = false;
+        Core::OptionalType<string> sessionId;
+        Core::hresult hr = VoiceSessionRequest(requestType, transcriptionOpt, Core::OptionalType<string>(), Core::OptionalType<string>(), Core::OptionalType<string>(), success, sessionId);
+        result.success = hr == Core::ERROR_NONE ? success : false;
         return hr;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
+    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, std::vector<string>& types)
     {
         LOGINFO("params={}");
+        types.clear();
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", result);
         if (callResult != Core::ERROR_NONE) {
@@ -753,35 +825,46 @@ namespace Plugin {
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
-        std::list<string> typeList;
         if (result.HasLabel("types")) {
             auto arr = result["types"].Array();
-            for (uint16_t i = 0; i < arr.Length(); i++) {
-                typeList.push_back(arr[i].String());
+            for (uint16_t i = 0; i < arr.Length() && types.size() < 16; i++) {
+                types.push_back(arr[i].String());
+            }
+            if (arr.Length() > 16) {
+                LOGERR("COM-RPC field 'types' exceeds @restrict limit: %u > 16 elements — truncating", static_cast<unsigned>(arr.Length()));
             }
         }
-        types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
 
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const string& payload, string& result)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const Exchange::VoiceSessionRequestType type, const Core::OptionalType<string>& transcription, const Core::OptionalType<string>& audioFile, const Core::OptionalType<string>& audioFormat, const Core::OptionalType<string>& name, bool& success, Core::OptionalType<string>& sessionId)
     {
-        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
-        const string& jsonParams = payload.empty() ? string("{}") : payload;
+        JsonObject params;
+        params["type"] = voiceSessionRequestTypeToString(type);
+        if (transcription.IsSet()) { params["transcription"] = transcription.Value(); }
+        if (audioFile.IsSet())     { params["audio_file"] = audioFile.Value(); }
+        if (audioFormat.IsSet())   { params["audio_format"] = audioFormat.Value(); }
+        if (name.IsSet())          { params["name"] = name.Value(); }
+
+        string jsonParams;
+        params.ToString(jsonParams);
+        LOGINFO("params=%s", jsonParams.c_str());
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, iarmResult);
         if (callResult != Core::ERROR_NONE) {
-            result = "{\"success\":false}";
+            success = false;
+            sessionId.Clear();
             return Core::ERROR_NONE;
         }
 
-        iarmResult.ToString(result);
-
-        // VoiceSessionRequest.result is @out @opaque with no @restrict — the generated
-        // stub's SetText<uint16_t> will silently truncate anything over 65535 bytes.
-        checkRestrictLimit(result, 65535, "VoiceSessionRequest.result");
+        success = iarmResult.HasLabel("success") ? iarmResult["success"].Boolean() : false;
+        if (iarmResult.HasLabel("sessionId")) {
+            sessionId = iarmResult["sessionId"].String();
+        } else {
+            sessionId.Clear();
+        }
 
         return Core::ERROR_NONE;
     }
