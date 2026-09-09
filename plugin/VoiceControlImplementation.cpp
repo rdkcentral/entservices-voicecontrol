@@ -812,27 +812,28 @@ namespace Plugin {
         return hr;
     }
 
-    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types)
+    Core::hresult VoiceControlImplementation::GetVoiceSessionTypes(bool& success, std::vector<string>& types)
     {
         LOGINFO("params={}");
+        types.clear();
         JsonObject result;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_TYPES, "{}", result);
         if (callResult != Core::ERROR_NONE) {
             success = false;
-            types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(std::list<string>{});
             return Core::ERROR_NONE;
         }
 
         success = result.HasLabel("success") ? result["success"].Boolean() : false;
 
-        std::list<string> typeList;
         if (result.HasLabel("types")) {
             auto arr = result["types"].Array();
-            for (uint16_t i = 0; i < arr.Length(); i++) {
-                typeList.push_back(arr[i].String());
+            for (uint16_t i = 0; i < arr.Length() && types.size() < 16; i++) {
+                types.push_back(arr[i].String());
+            }
+            if (arr.Length() > 16) {
+                LOGERR("COM-RPC field 'types' exceeds @restrict limit: %u > 16 elements — truncating", static_cast<unsigned>(arr.Length()));
             }
         }
-        types = Core::Service<RPC::StringIterator>::Create<Exchange::IStringIterator>(typeList);
 
         return Core::ERROR_NONE;
     }

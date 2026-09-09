@@ -51,7 +51,7 @@ namespace Plugin {
         Core::hresult SetVoiceInit(const std::vector<string>& roles, const Core::OptionalType<string>& transmissionProtocol, const Core::OptionalType<string>& downstreamProtocol, const std::vector<string>& capabilities, const Core::OptionalType<string>& clientProfile, const Core::OptionalType<string>& language, const std::vector<string>& vrexFields, const Core::OptionalType<Exchange::VoiceInitIdentity>& id, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SendVoiceMessage(const string& msgType, const Core::OptionalType<string>& trx, const Core::OptionalType<uint64_t>& created, const Core::OptionalType<string>& msgPayload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionByText(const string& transcription, const Core::OptionalType<Exchange::DeviceType>& type, Exchange::VoiceControlSuccessResult& result) override;
-        Core::hresult GetVoiceSessionTypes(bool& success, Exchange::IStringIterator*& types) override;
+        Core::hresult GetVoiceSessionTypes(bool& success, std::vector<string>& types) override;
         Core::hresult VoiceSessionRequest(const Exchange::VoiceSessionRequestType type, const Core::OptionalType<string>& transcription, const Core::OptionalType<string>& audioFile, const Core::OptionalType<string>& audioFormat, const Core::OptionalType<string>& name, bool& success, Core::OptionalType<string>& sessionId) override;
         Core::hresult VoiceSessionTerminate(const string& sessionId, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult VoiceSessionAudioStreamStart(const string& sessionId, Exchange::VoiceControlSuccessResult& result) override;
