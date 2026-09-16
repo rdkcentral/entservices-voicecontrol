@@ -104,7 +104,7 @@ namespace Plugin {
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
                             params.ToString(payload);
-                            LOGINFO("setVoiceInit params=%s", payload.c_str());
+                            LOGINFO("setVoiceInit paramsLen=%zu", payload.size());
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->SetVoiceInit(payload, result);
                             response["success"] = result.success;

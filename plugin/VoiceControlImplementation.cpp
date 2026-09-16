@@ -696,7 +696,7 @@ namespace Plugin {
 
     Core::hresult VoiceControlImplementation::SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result)
     {
-        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
+        LOGINFO("params=%s", _maskPii ? "<***>" : (payload.empty() ? "{}" : payload.c_str()));
         const string& jsonParams = payload.empty() ? string("{}") : payload;
 
         JsonObject iarmResult;
