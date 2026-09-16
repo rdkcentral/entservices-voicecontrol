@@ -94,6 +94,20 @@ namespace Plugin {
                     _adminLock.Unlock();
 
                     Exchange::JVoiceControl::Register(*this, implementation);
+
+                    // @json:omit: forward params as-is to ctrlm. Partners send bespoke
+                    // fields a typed/decomposed interface would silently drop.
+                    Register<JsonObject, JsonObject>("setVoiceInit",
+                        [this](const JsonObject& params, JsonObject& response) -> uint32_t {
+                            string payload;
+                            params.ToString(payload);
+                            LOGINFO("setVoiceInit params=%s", payload.c_str());
+                            Exchange::VoiceControlSuccessResult result{};
+                            Core::hresult hr = _implementation->SetVoiceInit(payload, result);
+                            response["success"] = result.success;
+                            LOGINFO("setVoiceInit result: hr=%u success=%s", hr, result.success ? "true" : "false");
+                            return hr;
+                        });
                 }
             }
         }
@@ -163,6 +177,7 @@ namespace Plugin {
         {
             implementation->Unregister(&_notification);
             Exchange::JVoiceControl::Unregister(*this);
+            Unregister("setVoiceInit");
 
             if (configure != nullptr) {
                 configure->Release();

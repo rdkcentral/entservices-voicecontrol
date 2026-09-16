@@ -694,36 +694,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::SetVoiceInit(const std::vector<string>& roles, const Core::OptionalType<string>& transmissionProtocol, const Core::OptionalType<string>& downstreamProtocol, const std::vector<string>& capabilities, const Core::OptionalType<string>& clientProfile, const Core::OptionalType<string>& language, const std::vector<string>& vrexFields, const Core::OptionalType<Exchange::VoiceInitIdentity>& id, Exchange::VoiceControlSuccessResult& result)
+    Core::hresult VoiceControlImplementation::SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result)
     {
-        JsonObject params;
-
-        const auto addStringArray = [&params](const char* label, const std::vector<string>& values) {
-            if (!values.empty()) {
-                JsonArray array;
-                for (const auto& value : values) {
-                    array.Add(Core::JSON::Variant(value));
-                }
-                params[label] = array;
-            }
-        };
-        addStringArray("roles", roles);
-        if (transmissionProtocol.IsSet()) { params["transmissionProtocol"] = transmissionProtocol.Value(); }
-        if (downstreamProtocol.IsSet())   { params["downstreamProtocol"] = downstreamProtocol.Value(); }
-        addStringArray("capabilities", capabilities);
-        if (clientProfile.IsSet()) { params["clientProfile"] = clientProfile.Value(); }
-        if (language.IsSet())      { params["language"] = language.Value(); }
-        addStringArray("vrexFields", vrexFields);
-        if (id.IsSet()) {
-            JsonObject idObj;
-            if (id.Value().type.IsSet())    { idObj["type"] = id.Value().type.Value(); }
-            if (id.Value().partner.IsSet()) { idObj["partner"] = id.Value().partner.Value(); }
-            params["id"] = idObj;
-        }
-
-        string jsonParams;
-        params.ToString(jsonParams);
-        LOGINFO("params=%s", jsonParams.c_str());
+        LOGINFO("params=%s", payload.empty() ? "{}" : payload.c_str());
+        const string& jsonParams = payload.empty() ? string("{}") : payload;
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SET_VOICE_INIT, jsonParams, iarmResult);
