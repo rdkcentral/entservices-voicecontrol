@@ -47,7 +47,6 @@ namespace Plugin {
         // IVoiceControl methods
         Core::hresult GetApiVersionNumber(Exchange::VoiceControlGetApiVersionNumberResponse& response) override;
         Core::hresult GetVoiceStatus(Exchange::VoiceStatusResponse& response) override;
-        Core::hresult IsMaskPiiEnabled(bool& enabled) override;
         Core::hresult ConfigureVoice(const Core::OptionalType<string>& urlAll, const Core::OptionalType<string>& urlPtt, const Core::OptionalType<string>& urlHf, const Core::OptionalType<string>& urlMicTap, const Core::OptionalType<bool>& enable, const Core::OptionalType<bool>& prv, const Core::OptionalType<bool>& wwFeedback, const Core::OptionalType<Exchange::DeviceEnableConfig>& ptt, const Core::OptionalType<Exchange::DeviceEnableConfig>& ff, const Core::OptionalType<Exchange::DeviceEnableConfig>& mic, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SetVoiceInit(const string& payload, Exchange::VoiceControlSuccessResult& result) override;
         Core::hresult SendVoiceMessage(const string& msgType, const Core::OptionalType<string>& trx, const Core::OptionalType<uint64_t>& created, const Core::OptionalType<string>& msgPayload, Exchange::VoiceControlSuccessResult& result) override;

@@ -655,12 +655,6 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::IsMaskPiiEnabled(bool& enabled)
-    {
-        enabled = _maskPii.load();
-        return Core::ERROR_NONE;
-    }
-
     Core::hresult VoiceControlImplementation::ConfigureVoice(const Core::OptionalType<string>& urlAll, const Core::OptionalType<string>& urlPtt, const Core::OptionalType<string>& urlHf, const Core::OptionalType<string>& urlMicTap, const Core::OptionalType<bool>& enable, const Core::OptionalType<bool>& prv, const Core::OptionalType<bool>& wwFeedback, const Core::OptionalType<Exchange::DeviceEnableConfig>& ptt, const Core::OptionalType<Exchange::DeviceEnableConfig>& ff, const Core::OptionalType<Exchange::DeviceEnableConfig>& mic, Exchange::VoiceControlSuccessResult& result)
     {
         JsonObject params;

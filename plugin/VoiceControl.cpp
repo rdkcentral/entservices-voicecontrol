@@ -104,9 +104,7 @@ namespace Plugin {
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
                             params.ToString(payload);
-                            bool maskPii = false;
-                            _implementation->IsMaskPiiEnabled(maskPii);
-                            LOGINFO("setVoiceInit params=%s", maskPii ? "<***>" : payload.c_str());
+                            LOGINFO("setVoiceInit paramsLen=%zu", payload.size());
                             Exchange::VoiceControlSuccessResult result{};
                             Core::hresult hr = _implementation->SetVoiceInit(payload, result);
                             response["success"] = result.success;
