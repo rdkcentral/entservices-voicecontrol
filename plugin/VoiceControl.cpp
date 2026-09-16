@@ -95,8 +95,11 @@ namespace Plugin {
 
                     Exchange::JVoiceControl::Register(*this, implementation);
 
-                    // @json:omit: forward params as-is to ctrlm. Partners send bespoke
-                    // fields a typed/decomposed interface would silently drop.
+                    // setVoiceInit is @json:omit for the same reason: the old plugin
+                    // forwarded the entire init JSON (roles, transmissionProtocol,
+                    // capabilities, clientProfile, vrexFields, id, etc.) unchanged
+                    // to ctrlm. The typed interface would only pass language +
+                    // capabilities, stripping fields vrex requires.
                     Register<JsonObject, JsonObject>("setVoiceInit",
                         [this](const JsonObject& params, JsonObject& response) -> uint32_t {
                             string payload;
