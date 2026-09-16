@@ -681,7 +681,7 @@ namespace Plugin {
 
         string jsonParams;
         params.ToString(jsonParams);
-        LOGINFO("params=%s", jsonParams.c_str());
+        LOGINFO("params=%s", _maskPii ? "<***>" : jsonParams.c_str());
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_CONFIGURE_VOICE, jsonParams, iarmResult);
@@ -823,7 +823,7 @@ namespace Plugin {
 
         string jsonParams;
         params.ToString(jsonParams);
-        LOGINFO("params=%s", jsonParams.c_str());
+        LOGINFO("params=%s", _maskPii ? "<***>" : jsonParams.c_str());
 
         JsonObject iarmResult;
         Core::hresult callResult = IARMBusCall(CTRLM_VOICE_IARM_CALL_SESSION_REQUEST, jsonParams, iarmResult);
