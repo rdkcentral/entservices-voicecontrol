@@ -47,7 +47,7 @@ cd Thunder
 git checkout 2c0fcc5529e7da734be558ca6efa05d934dcce31
 cd ..
 
-git clone --single-branch --depth 1 --branch feature/RDKEMW-22650 https://github.com/rdkcentral/entservices-apis.git
+git clone --single-branch --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
 
 git clone --single-branch --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 
