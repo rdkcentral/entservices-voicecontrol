@@ -79,7 +79,7 @@ namespace Plugin {
             case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_SINGLE: return "mic_tap_stream_single";
             case Exchange::VoiceSessionRequestType::MIC_TAP_STREAM_MULTI:  return "mic_tap_stream_multi";
             case Exchange::VoiceSessionRequestType::MIC_FACTORY_TEST:      return "mic_factory_test";
-            default:                                                      return "ptt_transcription";
+            default:                                                       return "ptt_transcription";
             }
         }
 
