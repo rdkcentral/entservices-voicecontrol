@@ -65,6 +65,15 @@ curl -d '{"jsonrpc":"2.0","id":"5","method":"org.rdk.VoiceControl.1.voiceStatus"
 
 # Get supported session types
 curl -d '{"jsonrpc":"2.0","id":"6","method":"org.rdk.VoiceControl.1.voiceSessionTypes"}' http://127.0.0.1:9998/jsonrpc
+
+# Listen to the only connected paired PTT remote
+curl -d '{"jsonrpc":"2.0","id":"7","method":"org.rdk.VoiceControl.1.voiceSessionRequest","params":{"type":"ptt_listen"}}' http://127.0.0.1:9998/jsonrpc
+
+# Listen to a specific paired PTT remote
+curl -d '{"jsonrpc":"2.0","id":"8","method":"org.rdk.VoiceControl.1.voiceSessionRequest","params":{"type":"ptt_listen","macAddr":"AA:BB:CC:DD:EE:FF"}}' http://127.0.0.1:9998/jsonrpc
+
+# Stop listening using the sessionId returned by voiceSessionRequest
+curl -d '{"jsonrpc":"2.0","id":"9","method":"org.rdk.VoiceControl.1.voiceSessionTerminate","params":{"sessionId":"00000000-0000-0000-0000-000000000000"}}' http://127.0.0.1:9998/jsonrpc
 ```
 
 ## Dependencies
