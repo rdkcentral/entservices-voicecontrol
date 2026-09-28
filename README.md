@@ -43,6 +43,15 @@ cmake ..
 make
 ```
 
+## Versioning
+
+Version info is generated at configure time ([cmake/GitVersion.cmake](cmake/GitVersion.cmake)); there is no version file to edit.
+Major/minor/patch come from `-DPLUGIN_VERSION=x.y.z` (the Yocto recipe passes `${PV}`). Without it, the nearest `x.y.z` git tag is used, then `BUILD_REFERENCE` if it is `x.y.z`, else `0.0.0`.
+
+- Startup log prints `name <VoiceControl> version <x.y.z> branch <...> commit <hash>`, matching ctrlm and xr-voice-sdk. `++` is appended to the version if the source tree has local modifications.
+- `getApiVersionNumber` returns the major number, so only bump major for breaking API changes. It does not affect the `.1.` in JSON-RPC method names.
+- Each component must be <= 255 (Thunder stores them as `uint8_t`).
+
 ## Testing
 
 ### API Version and Quirks
