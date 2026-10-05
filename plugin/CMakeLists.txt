@@ -38,7 +38,7 @@ endif()
 ## Version info generated from git (see cmake/GitVersion.cmake and README.md "Versioning")
 include(GitVersion)
 message(STATUS "${PLUGIN_NAME} version ${PLUGIN_VERSION_STRING} branch ${PLUGIN_GIT_BRANCH} commit ${PLUGIN_GIT_HASH}")
-configure_file(PluginVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/PluginVersion.h @ONLY)
+configure_file(PluginVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/PluginVersion.h @ONLY ESCAPE_QUOTES)
 
 if (BUILD_TESTS)
     add_subdirectory(test)
