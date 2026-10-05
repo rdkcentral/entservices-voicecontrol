@@ -32,7 +32,7 @@ set(PLUGIN_VERSION "" CACHE STRING "Plugin version x.y.z (Yocto recipes pass \${
 
 # x.y.z with an optional ".n" or "-text" suffix; no leading zeros since the parts become C++ integer literals,
 # and the suffix is limited to characters that are safe inside the generated C string
-set(_version_regex "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-][0-9A-Za-z._+-]*)?$")
+set(_version_regex "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-][0-9A-Za-z][0-9A-Za-z._+-]*)?$")
 
 get_filename_component(_repo_root "${CMAKE_CURRENT_LIST_DIR}/.." REALPATH)
 
@@ -126,7 +126,7 @@ if(_version_source MATCHES "${_version_regex}")
     set(PLUGIN_VERSION_PATCH ${CMAKE_MATCH_3})
     set(PLUGIN_VERSION_STRING "${_version_source}")
 elseif(PLUGIN_VERSION)
-    message(FATAL_ERROR "PLUGIN_VERSION '${PLUGIN_VERSION}' must start with x.y.z (no leading zeros)")
+    message(FATAL_ERROR "PLUGIN_VERSION '${PLUGIN_VERSION}' must be x.y.z with no leading zeros, optionally followed by '.' or '-' and a suffix of letters, digits and ._+- that starts with a letter or digit (e.g. 1.0.5.1, 1.0.2-RDK7.1)")
 else()
     # 1.0.1 was the hardcoded version before this file, so untagged builds register as before
     message(WARNING "No PLUGIN_VERSION or x.y.z version tag found (shallow clone or no git?); using version 1.0.1")
