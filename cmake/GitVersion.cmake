@@ -30,8 +30,9 @@
 
 set(PLUGIN_VERSION "" CACHE STRING "Plugin version x.y.z (Yocto recipes pass \${PV})")
 
-# x.y.z with an optional ".n" or "-text" suffix; no leading zeros since the parts become C++ integer literals
-set(_version_regex "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-].*)?$")
+# x.y.z with an optional ".n" or "-text" suffix; no leading zeros since the parts become C++ integer literals,
+# and the suffix is limited to characters that are safe inside the generated C string
+set(_version_regex "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-][0-9A-Za-z._+-]*)?$")
 
 get_filename_component(_repo_root "${CMAKE_CURRENT_LIST_DIR}/.." REALPATH)
 
@@ -58,24 +59,27 @@ if(GIT_FOUND)
             OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
         # Nearest tag that passes _version_regex; the glob is looser, so exclude each failing tag and retry
         set(_exclude_args "")
-        foreach(_attempt RANGE 20)
+        while(TRUE)
             execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*" ${_exclude_args}
                 WORKING_DIRECTORY ${_repo_root}
                 OUTPUT_VARIABLE _candidate
                 OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-            if(NOT _candidate)
+            # A repeat means --exclude didn't take (e.g. glob characters in the tag name), so stop
+            list(FIND _exclude_args "${_candidate}" _seen)
+            if(NOT _candidate OR _seen GREATER -1)
                 break()
             elseif(_candidate MATCHES "${_version_regex}")
                 set(_git_tag "${_candidate}")
                 break()
             endif()
             list(APPEND _exclude_args --exclude "${_candidate}")
-        endforeach()
+        endwhile()
         execute_process(COMMAND ${GIT_EXECUTABLE} diff --quiet HEAD
             WORKING_DIRECTORY ${_repo_root}
             RESULT_VARIABLE _git_diff_result
             OUTPUT_QUIET ERROR_QUIET)
-        if(NOT _git_diff_result EQUAL 0)
+        # 1 means differences; anything above 1 is a git error, not a dirty tree
+        if(_git_diff_result EQUAL 1)
             set(_git_dirty TRUE)
         endif()
 
@@ -150,7 +154,10 @@ endif()
 
 if(PLUGIN_GIT_HASH)
     set(PLUGIN_BUILD_REFERENCE "${PLUGIN_GIT_HASH}")
+elseif(BUILD_REFERENCE)
+    # No git (e.g. source archive): report the recipe's BUILD_REFERENCE rather than "unknown"
+    set(PLUGIN_GIT_HASH "${BUILD_REFERENCE}")
+    set(PLUGIN_BUILD_REFERENCE "${BUILD_REFERENCE}")
 else()
     set(PLUGIN_GIT_HASH "unknown")
-    set(PLUGIN_BUILD_REFERENCE "${BUILD_REFERENCE}")
 endif()
