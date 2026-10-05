@@ -22,13 +22,16 @@
 #
 # Sets:
 #   PLUGIN_VERSION_MAJOR / _MINOR / _PATCH  - from PLUGIN_VERSION (the recipe's ${PV}),
-#                                             else the nearest x.y.z tag, else BUILD_REFERENCE
+#                                             else the nearest version tag, else BUILD_REFERENCE
 #   PLUGIN_VERSION_STRING                   - the full version (e.g. 1.0.5), with "++" appended if the tree is modified
 #   PLUGIN_GIT_BRANCH                       - exact tag, current branch, or a branch containing HEAD
 #   PLUGIN_GIT_HASH                         - full commit hash, or "unknown"
 #   PLUGIN_BUILD_REFERENCE                  - value for Thunder's BUILD_REFERENCE define
 
 set(PLUGIN_VERSION "" CACHE STRING "Plugin version x.y.z (Yocto recipes pass \${PV})")
+
+# x.y.z with an optional ".n" or "-text" suffix; no leading zeros since the parts become C++ integer literals
+set(_version_regex "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-].*)?$")
 
 get_filename_component(_repo_root "${CMAKE_CURRENT_LIST_DIR}/.." REALPATH)
 
@@ -53,11 +56,21 @@ if(GIT_FOUND)
             WORKING_DIRECTORY ${_repo_root}
             OUTPUT_VARIABLE PLUGIN_GIT_HASH
             OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-        # --match skips non-version tags such as IMPORT_INITIAL_develop; suffixed tags (1.0.5.1, 1.0.2-RDK7.1) are accepted below
-        execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*"
-            WORKING_DIRECTORY ${_repo_root}
-            OUTPUT_VARIABLE _git_tag
-            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        # Nearest tag that passes _version_regex; the glob is looser, so exclude each failing tag and retry
+        set(_exclude_args "")
+        foreach(_attempt RANGE 20)
+            execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*" ${_exclude_args}
+                WORKING_DIRECTORY ${_repo_root}
+                OUTPUT_VARIABLE _candidate
+                OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+            if(NOT _candidate)
+                break()
+            elseif(_candidate MATCHES "${_version_regex}")
+                set(_git_tag "${_candidate}")
+                break()
+            endif()
+            list(APPEND _exclude_args --exclude "${_candidate}")
+        endforeach()
         execute_process(COMMAND ${GIT_EXECUTABLE} diff --quiet HEAD
             WORKING_DIRECTORY ${_repo_root}
             RESULT_VARIABLE _git_diff_result
@@ -103,8 +116,7 @@ else()
     set(_version_source "${BUILD_REFERENCE}")
 endif()
 
-# x.y.z with an optional ".n" or "-text" suffix; no leading zeros since the parts become C++ integer literals
-if(_version_source MATCHES "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)([.-].*)?$")
+if(_version_source MATCHES "${_version_regex}")
     set(PLUGIN_VERSION_MAJOR ${CMAKE_MATCH_1})
     set(PLUGIN_VERSION_MINOR ${CMAKE_MATCH_2})
     set(PLUGIN_VERSION_PATCH ${CMAKE_MATCH_3})
@@ -112,12 +124,12 @@ if(_version_source MATCHES "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)
 elseif(PLUGIN_VERSION)
     message(FATAL_ERROR "PLUGIN_VERSION '${PLUGIN_VERSION}' must start with x.y.z (no leading zeros)")
 else()
-    # Keep API major 1 so getApiVersionNumber and Thunder registration don't change in untagged builds
-    message(WARNING "No PLUGIN_VERSION or x.y.z version tag found (shallow clone or no git?); using version 1.0.0")
+    # 1.0.1 was the hardcoded version before this file, so untagged builds register as before
+    message(WARNING "No PLUGIN_VERSION or x.y.z version tag found (shallow clone or no git?); using version 1.0.1")
     set(PLUGIN_VERSION_MAJOR 1)
     set(PLUGIN_VERSION_MINOR 0)
-    set(PLUGIN_VERSION_PATCH 0)
-    set(PLUGIN_VERSION_STRING "1.0.0")
+    set(PLUGIN_VERSION_PATCH 1)
+    set(PLUGIN_VERSION_STRING "1.0.1")
 endif()
 
 # Thunder stores plugin versions as uint8_t
