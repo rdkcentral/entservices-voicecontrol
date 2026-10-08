@@ -70,6 +70,7 @@ namespace Plugin {
             switch (type) {
             case Exchange::VoiceSessionRequestType::PTT_TRANSCRIPTION:     return "ptt_transcription";
             case Exchange::VoiceSessionRequestType::PTT_AUDIO_FILE:        return "ptt_audio_file";
+            case Exchange::VoiceSessionRequestType::PTT_LISTEN:            return "ptt_listen";
             case Exchange::VoiceSessionRequestType::FF_TRANSCRIPTION:      return "ff_transcription";
             case Exchange::VoiceSessionRequestType::MIC_TRANSCRIPTION:     return "mic_transcription";
             case Exchange::VoiceSessionRequestType::MIC_AUDIO_FILE:        return "mic_audio_file";
@@ -781,7 +782,7 @@ namespace Plugin {
 
         bool success = false;
         Core::OptionalType<string> sessionId;
-        Core::hresult hr = VoiceSessionRequest(requestType, transcriptionOpt, Core::OptionalType<string>(), Core::OptionalType<string>(), Core::OptionalType<string>(), success, sessionId);
+        Core::hresult hr = VoiceSessionRequest(requestType, transcriptionOpt, Core::OptionalType<string>(), Core::OptionalType<string>(), Core::OptionalType<string>(), Core::OptionalType<string>(), Core::OptionalType<uint32_t>(), success, sessionId);
         result.success = hr == Core::ERROR_NONE ? success : false;
         return hr;
     }
@@ -812,7 +813,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const Exchange::VoiceSessionRequestType type, const Core::OptionalType<string>& transcription, const Core::OptionalType<string>& audioFile, const Core::OptionalType<string>& audioFormat, const Core::OptionalType<string>& name, bool& success, Core::OptionalType<string>& sessionId)
+    Core::hresult VoiceControlImplementation::VoiceSessionRequest(const Exchange::VoiceSessionRequestType type, const Core::OptionalType<string>& transcription, const Core::OptionalType<string>& audioFile, const Core::OptionalType<string>& audioFormat, const Core::OptionalType<string>& name, const Core::OptionalType<string>& macAddr, const Core::OptionalType<uint32_t>& audioDuration, bool& success, Core::OptionalType<string>& sessionId)
     {
         JsonObject params;
         params["type"] = voiceSessionRequestTypeToString(type);
@@ -820,6 +821,8 @@ namespace Plugin {
         if (audioFile.IsSet())     { params["audio_file"] = audioFile.Value(); }
         if (audioFormat.IsSet())   { params["audio_format"] = audioFormat.Value(); }
         if (name.IsSet())          { params["name"] = name.Value(); }
+        if (macAddr.IsSet())       { params["macAddr"] = macAddr.Value(); }
+        if (audioDuration.IsSet()) { params["audioDuration"] = static_cast<int64_t>(audioDuration.Value()); }
 
         string jsonParams;
         params.ToString(jsonParams);
