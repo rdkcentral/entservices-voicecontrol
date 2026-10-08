@@ -121,7 +121,7 @@ The plugin handles six primary voice event types:
 ### Voice Session Request Flow
 1. **Client Request**: JSON-RPC voice session request received by `VoiceControl` plugin class.
 2. **COM-RPC Dispatch**: Call forwarded via COM-RPC to `VoiceControlImplementation` in the out-of-process host.
-3. **IARM Communication**: Implementation serializes parameters and calls ctrlm via IARM bus, including the `ptt_listen` type and its optional `macAddr` and `audioDuration` parameters.
+3. **IARM Communication**: Implementation serializes parameters and calls ctrlm via IARM bus.
 4. **Controller Selection**: For `ptt_listen` (non-production builds only), ctrlm targets the requested paired BLE RCU or requires exactly one connected paired RCU when `macAddr` is omitted. The optional `audioDuration` (milliseconds, 1 to 300000) limits the length of the remote audio stream.
 5. **Server Processing**: Voice server processes audio/text input.
 6. **Response**: Result returned through COM-RPC back to the plugin and formatted as a JSON-RPC response. The returned `sessionId` can be passed to `voiceSessionTerminate` to stop the remote stream.
