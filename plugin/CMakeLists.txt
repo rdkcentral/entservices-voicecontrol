@@ -38,17 +38,17 @@ endif()
 ## Version: API numbers from the project version, startup log details from git
 add_definitions(-DAPI_VERSION_NUMBER_MAJOR=${PROJECT_VERSION_MAJOR} -DAPI_VERSION_NUMBER_MINOR=${PROJECT_VERSION_MINOR} -DAPI_VERSION_NUMBER_PATCH=${PROJECT_VERSION_PATCH})
 
-add_custom_command(OUTPUT PluginVersion.h
-   COMMAND echo -n "#define PLUGIN_GIT_BRANCH     \"" > PluginVersion.h
-   COMMAND sh -c "src=\"${CMAKE_CURRENT_SOURCE_DIR}\"; ref=$(git -C \"$src\" describe --tags --exact-match 2>/dev/null || git -C \"$src\" branch -a --format='%(refname:short)' --contains HEAD 2>/dev/null | sed -n '2{p;q}'); echo -n \"$ref\" >> PluginVersion.h"
-   COMMAND echo "\"" >> PluginVersion.h
-   COMMAND echo -n "#define PLUGIN_GIT_HASH       " >> PluginVersion.h
-   COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} log --format=\"%H\" -n 1 >> PluginVersion.h
-   COMMAND echo -n "#define PLUGIN_VERSION_STRING \"${PROJECT_VERSION}" >> PluginVersion.h
-   COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} diff --quiet || echo -n "++" >> PluginVersion.h
-   COMMAND echo "\"" >> PluginVersion.h
-   VERBATIM
-)
+# Git info for the startup log; values are left empty if git is unavailable
+execute_process(COMMAND git describe --tags --exact-match WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(NOT PLUGIN_GIT_BRANCH)
+    execute_process(COMMAND git branch -a "--format=%(refname:short)" --contains HEAD COMMAND sed -n 2p WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+execute_process(COMMAND git log -1 --format=%H WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+execute_process(COMMAND git diff --quiet WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE PLUGIN_GIT_DIRTY ERROR_QUIET)
+set(PLUGIN_VERSION_STRING ${PROJECT_VERSION})
+if(PLUGIN_GIT_DIRTY EQUAL 1)
+    set(PLUGIN_VERSION_STRING "${PROJECT_VERSION}++")
+endif()
 
 if (BUILD_TESTS)
     add_subdirectory(test)
@@ -57,14 +57,14 @@ endif(BUILD_TESTS)
 ## Plugin library (loaded by Thunder framework — thin JSON-RPC + COM-RPC shell)
 add_library(${MODULE_NAME} SHARED
         VoiceControl.cpp
-        Module.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/PluginVersion.h)
+        Module.cpp)
 
 set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES)
 
-target_include_directories(${MODULE_NAME} PRIVATE ../helpers ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
+target_compile_definitions(${MODULE_NAME} PRIVATE PLUGIN_GIT_BRANCH="${PLUGIN_GIT_BRANCH}" PLUGIN_GIT_HASH="${PLUGIN_GIT_HASH}" PLUGIN_VERSION_STRING="${PLUGIN_VERSION_STRING}")
 target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
