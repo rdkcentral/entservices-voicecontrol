@@ -19,7 +19,7 @@
 
 cmake_minimum_required(VERSION 3.3)
 
-# Yocto passes -DCMAKE_PROJECT_VERSION=${PV}, same as ctrlm and xr-voice-sdk
+# Yocto passes ${PV}
 set(CMAKE_PROJECT_VERSION "1.0.1" CACHE STRING "Plugin version x.y.z")
 project(entservices-voicecontrol VERSION ${CMAKE_PROJECT_VERSION})
 

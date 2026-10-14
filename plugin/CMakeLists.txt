@@ -35,7 +35,7 @@ else()
     find_package(${NAMESPACE}Protocols REQUIRED)
 endif()
 
-## Version: API numbers come from the project version; the startup log header is generated like ctrlm and xr-voice-sdk
+## Version: API numbers from the project version, startup log details from git
 add_definitions(-DAPI_VERSION_NUMBER_MAJOR=${PROJECT_VERSION_MAJOR} -DAPI_VERSION_NUMBER_MINOR=${PROJECT_VERSION_MINOR} -DAPI_VERSION_NUMBER_PATCH=${PROJECT_VERSION_PATCH})
 
 add_custom_command(OUTPUT PluginVersion.h
