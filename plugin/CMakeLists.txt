@@ -35,10 +35,20 @@ else()
     find_package(${NAMESPACE}Protocols REQUIRED)
 endif()
 
-## Version info generated from git (see cmake/GitVersion.cmake and README.md "Versioning")
-include(GitVersion)
-message(STATUS "${PLUGIN_NAME} version ${PLUGIN_VERSION_STRING} branch ${PLUGIN_GIT_BRANCH} commit ${PLUGIN_GIT_HASH}")
-configure_file(PluginVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/PluginVersion.h @ONLY ESCAPE_QUOTES)
+## Version: API numbers come from the project version; the startup log header is generated like ctrlm and xr-voice-sdk
+add_definitions(-DAPI_VERSION_NUMBER_MAJOR=${PROJECT_VERSION_MAJOR} -DAPI_VERSION_NUMBER_MINOR=${PROJECT_VERSION_MINOR} -DAPI_VERSION_NUMBER_PATCH=${PROJECT_VERSION_PATCH})
+
+add_custom_command(OUTPUT PluginVersion.h
+   COMMAND echo -n "#define PLUGIN_GIT_BRANCH     \"" > PluginVersion.h
+   COMMAND sh -c "src=\"${CMAKE_CURRENT_SOURCE_DIR}\"; ref=$(git -C \"$src\" describe --tags --exact-match 2>/dev/null || git -C \"$src\" branch -a --format='%(refname:short)' --contains HEAD 2>/dev/null | sed -n '2{p;q}'); echo -n \"$ref\" >> PluginVersion.h"
+   COMMAND echo "\"" >> PluginVersion.h
+   COMMAND echo -n "#define PLUGIN_GIT_HASH       " >> PluginVersion.h
+   COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} log --format=\"%H\" -n 1 >> PluginVersion.h
+   COMMAND echo -n "#define PLUGIN_VERSION_STRING \"${PROJECT_VERSION}" >> PluginVersion.h
+   COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} diff --quiet || echo -n "++" >> PluginVersion.h
+   COMMAND echo "\"" >> PluginVersion.h
+   VERBATIM
+)
 
 if (BUILD_TESTS)
     add_subdirectory(test)
@@ -47,16 +57,14 @@ endif(BUILD_TESTS)
 ## Plugin library (loaded by Thunder framework — thin JSON-RPC + COM-RPC shell)
 add_library(${MODULE_NAME} SHARED
         VoiceControl.cpp
-        Module.cpp)
+        Module.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/PluginVersion.h)
 
 set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers ${CMAKE_CURRENT_BINARY_DIR})
-if (PLUGIN_BUILD_REFERENCE)
-    target_compile_definitions(${MODULE_NAME} PRIVATE BUILD_REFERENCE=${PLUGIN_BUILD_REFERENCE})
-endif()
 target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
@@ -69,10 +77,7 @@ set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES)
 
-target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers ${CMAKE_CURRENT_BINARY_DIR})
-if (PLUGIN_BUILD_REFERENCE)
-    target_compile_definitions(${PLUGIN_IMPLEMENTATION} PRIVATE BUILD_REFERENCE=${PLUGIN_BUILD_REFERENCE})
-endif()
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
 
 target_compile_definitions(${PLUGIN_IMPLEMENTATION} PRIVATE CTRLM_FOUND)
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CTRLM_INCLUDE_DIRS})
