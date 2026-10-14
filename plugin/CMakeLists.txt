@@ -35,6 +35,28 @@ else()
     find_package(${NAMESPACE}Protocols REQUIRED)
 endif()
 
+## Version: API numbers from the project version, startup log details from git
+add_definitions(-DAPI_VERSION_NUMBER_MAJOR=${PROJECT_VERSION_MAJOR} -DAPI_VERSION_NUMBER_MINOR=${PROJECT_VERSION_MINOR} -DAPI_VERSION_NUMBER_PATCH=${PROJECT_VERSION_PATCH})
+
+# Git info for the startup log; the commit hash is required, the branch may be empty
+execute_process(COMMAND git describe --tags --exact-match WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(NOT PLUGIN_GIT_BRANCH)
+    execute_process(COMMAND git symbolic-ref -q --short HEAD WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+# Detached checkout (e.g. Yocto): line 1 is "(HEAD detached at ...)", so take the first real branch
+if(NOT PLUGIN_GIT_BRANCH)
+    execute_process(COMMAND git branch -a "--format=%(refname:short)" --contains HEAD COMMAND sed -n 2p WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+execute_process(COMMAND git log -1 --format=%H WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PLUGIN_GIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(NOT PLUGIN_GIT_HASH)
+    message(FATAL_ERROR "Could not read the git commit hash from ${CMAKE_CURRENT_SOURCE_DIR}; a git checkout is required")
+endif()
+execute_process(COMMAND git diff --quiet HEAD WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE PLUGIN_GIT_DIRTY ERROR_QUIET)
+set(PLUGIN_VERSION_STRING ${PROJECT_VERSION})
+if(PLUGIN_GIT_DIRTY EQUAL 1)
+    set(PLUGIN_VERSION_STRING "${PROJECT_VERSION}++")
+endif()
+
 if (BUILD_TESTS)
     add_subdirectory(test)
 endif(BUILD_TESTS)
@@ -49,6 +71,7 @@ set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
+target_compile_definitions(${MODULE_NAME} PRIVATE PLUGIN_GIT_BRANCH="${PLUGIN_GIT_BRANCH}" PLUGIN_GIT_HASH="${PLUGIN_GIT_HASH}" PLUGIN_VERSION_STRING="${PLUGIN_VERSION_STRING}")
 target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
