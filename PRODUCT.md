@@ -107,8 +107,8 @@ The VoiceControl service is a comprehensive voice assistant management solution 
 
 ### Session Management APIs
 - `voiceSessionTypes()` - Discover supported voice session types
-- `voiceSessionRequest()` - Initiate new voice sessions
-- `voiceSessionTerminate()` - End active voice sessions
+- `voiceSessionRequest()` - Initiate new voice sessions, including `ptt_listen` with an optional colon-delimited `macAddr`; when omitted, exactly one connected paired PTT remote must be available
+- `voiceSessionTerminate()` - End active voice sessions and stop remote streaming for `ptt_listen`
 - `voiceSessionAudioStreamStart()` - Start audio streaming
 - `voiceSessionByText()` - Legacy text-based session API (deprecated)
 
