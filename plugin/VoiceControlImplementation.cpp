@@ -18,7 +18,6 @@
   */
 
 #include "VoiceControlImplementation.h"
-#include "PluginVersion.h"
 #include "libIBusDaemon.h"
 #include "UtilsIarm.h"
 

@@ -35,6 +35,11 @@ else()
     find_package(${NAMESPACE}Protocols REQUIRED)
 endif()
 
+## Version: API numbers from the project version, startup log details from git
+add_definitions(-DAPI_VERSION_NUMBER_MAJOR=${PROJECT_VERSION_MAJOR} -DAPI_VERSION_NUMBER_MINOR=${PROJECT_VERSION_MINOR} -DAPI_VERSION_NUMBER_PATCH=${PROJECT_VERSION_PATCH})
+
+include(GitVersion)
+
 if (BUILD_TESTS)
     add_subdirectory(test)
 endif(BUILD_TESTS)
@@ -49,6 +54,7 @@ set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD_REQUIRED YES)
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
+component_version(${MODULE_NAME} DEFINE_PREFIX PLUGIN)
 target_link_libraries(${MODULE_NAME} PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)

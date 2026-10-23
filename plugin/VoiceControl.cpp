@@ -18,7 +18,6 @@
   */
 
 #include "VoiceControl.h"
-#include "PluginVersion.h"
 
 namespace WPEFramework {
 
@@ -46,6 +45,8 @@ namespace Plugin {
         Exchange::IVoiceControl* implementation = nullptr;
         Exchange::IConfiguration* configure = nullptr;
         uint32_t connectionId = 0;
+
+        LOGINFO("name <%-24s> version <%-9s> branch <%-20s> commit <%s>", "VoiceControl", PLUGIN_VERSION_STRING, PLUGIN_GIT_BRANCH, PLUGIN_GIT_HASH);
 
         ASSERT(service != nullptr);
         _adminLock.Lock();
