@@ -43,6 +43,7 @@ function(component_version target)
     endif()
     if(NOT _branch)
         execute_process(COMMAND git branch -a "--format=%(refname:short)" --contains HEAD COMMAND sed -n 2p WORKING_DIRECTORY ${_dir} OUTPUT_VARIABLE _branch OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        string(REGEX REPLACE "^origin/" "" _branch "${_branch}")
     endif()
 
     execute_process(COMMAND git log -1 --format=%H WORKING_DIRECTORY ${_dir} OUTPUT_VARIABLE _hash OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
