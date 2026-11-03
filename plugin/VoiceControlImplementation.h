@@ -28,7 +28,7 @@
 #include "ctrlm_ipc.h"
 #include "ctrlm_ipc_voice.h"
 
-namespace WPEFramework {
+namespace Thunder {
 namespace Plugin {
 
     class VoiceControlImplementation : public Exchange::IVoiceControl, public Exchange::IConfiguration {
@@ -93,4 +93,4 @@ namespace Plugin {
     };
 
 } // namespace Plugin
-} // namespace WPEFramework
+} // namespace Thunder
