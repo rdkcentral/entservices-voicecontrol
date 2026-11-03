@@ -8,6 +8,8 @@ GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 cd ${GITHUB_WORKSPACE}
 
+git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
 BUILD_TESTS=false
 for arg in "$@"; do
     if [ "$arg" = "--build-tests" ]; then
