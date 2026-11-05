@@ -8,6 +8,8 @@ GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 cd ${GITHUB_WORKSPACE}
 
+git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
 BUILD_TESTS=false
 for arg in "$@"; do
     if [ "$arg" = "--build-tests" ]; then
@@ -47,7 +49,7 @@ cd Thunder
 git checkout 2c0fcc5529e7da734be558ca6efa05d934dcce31
 cd ..
 
-git clone --single-branch --depth 1 --branch develop https://github.com/rdkcentral/entservices-apis.git
+git clone --single-branch --depth 1 --branch 4.3.4 https://github.com/rdkcentral/entservices-apis.git
 
 git clone --single-branch --depth 1 --branch $CTRLM_TAG https://github.com/rdkcentral/control.git
 

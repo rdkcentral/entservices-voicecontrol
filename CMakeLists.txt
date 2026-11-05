@@ -19,6 +19,10 @@
 
 cmake_minimum_required(VERSION 3.3)
 
+# Yocto passes ${PV}
+set(CMAKE_PROJECT_VERSION "1.0.1" CACHE STRING "Plugin version x.y.z")
+project(entservices-voicecontrol VERSION ${CMAKE_PROJECT_VERSION})
+
 find_package(WPEFramework)
 
 # All packages that did not deliver a CMake Find script (and some deprecated scripts that need to be removed)
