@@ -184,7 +184,7 @@ namespace Plugin {
         uint32_t connectionId = 0;
 
         _adminLock.Lock();
-        if (_service == nullptr || _service != service)
+        if (_service != service)
         {
             LOGWARN("VoiceControl::Deinitialize called with no matching active service (service=%p, _service=%p); skipping teardown.", service, _service);
             _adminLock.Unlock();
