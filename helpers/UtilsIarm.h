@@ -85,6 +85,6 @@ struct IARM {
         return (isRegistered == 1);
     }
 
-    static constexpr const char* NAME = "Thunder_Plugins";
+    static constexpr const char* NAME = "VoiceControl";
 };
 }
