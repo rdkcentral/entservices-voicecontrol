@@ -30,14 +30,6 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - RDKEMW-22439: VOICE_INVALID_VREX_LENGTH error [`#17`](https://github.com/rdkcentral/entservices-voicecontrol/pull/17)
 
-#### [1.0.2.1](https://github.com/rdkcentral/entservices-voicecontrol/compare/1.0.2...1.0.2.1)
-
-> 27 July 2026
-
-Hotfix released from `support/1.0.2`.
-
-- RDKEMW-22439: VOICE_INVALID_VREX_LENGTH error [`c4da96a`](https://github.com/rdkcentral/entservices-voicecontrol/commit/c4da96a)
-
 #### [1.0.3](https://github.com/rdkcentral/entservices-voicecontrol/compare/1.0.2...1.0.3)
 
 > 21 July 2026
