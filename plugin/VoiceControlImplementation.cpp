@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <list>
 
+#define VOICECONTROL_IARM_MEMBER_NAME "Thunder_Plugins_VoiceCtrl"
+
 namespace WPEFramework {
 namespace Plugin {
 
@@ -173,7 +175,7 @@ namespace Plugin {
             _service = nullptr;
             return Core::ERROR_GENERAL;
         }
-        if (Utils::IARM::isConnected() == false) {
+        if (Utils::IARM::isConnected(VOICECONTROL_IARM_MEMBER_NAME) == false) {
             LOGERR("Failed to initialize IARM for VoiceControlImplementation, configuration will fail");
             DeinitializeIARM();
             _service->Release();
@@ -235,8 +237,8 @@ namespace Plugin {
 
     bool VoiceControlImplementation::InitializeIARM()
     {
-        const bool alreadyConnected = Utils::IARM::isConnected();
-        if (Utils::IARM::init()) {
+        const bool alreadyConnected = Utils::IARM::isConnected(VOICECONTROL_IARM_MEMBER_NAME);
+        if (Utils::IARM::init(VOICECONTROL_IARM_MEMBER_NAME)) {
             _hasOwnProcess = !alreadyConnected;
             IARM_Result_t res;
 #define VC_REGISTER(EVENT) \
